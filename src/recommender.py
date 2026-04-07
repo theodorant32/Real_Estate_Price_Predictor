@@ -470,15 +470,15 @@ class PropertyRecommender:
 
         recommendations = []
         for _, row in top.iterrows():
-            # Determine recommendation strength
-            if row["recommendation_score"] >= 70:
-                strength = "STRONG_BUY"
-            elif row["recommendation_score"] >= 50:
-                strength = "BUY"
-            elif row["recommendation_score"] >= 30:
-                strength = "CONSIDER"
+            score = row["recommendation_score"]
+            if score >= 70:
+                strength = "Excellent Choice"
+            elif score >= 50:
+                strength = "Great Option"
+            elif score >= 30:
+                strength = "Worth Considering"
             else:
-                strength = "PASS"
+                strength = "Think Twice"
 
             recommendations.append({
                 "city": row["city"],
@@ -486,7 +486,7 @@ class PropertyRecommender:
                 "price": row["price"],
                 "monthly_payment": row["monthly_payment"],
                 "total_monthly": row["total_monthly_cost"],
-                "predicted_appreciation": row["predicted_appreciation_6m"],
+                "predicted_appreciation": round(row["predicted_appreciation_6m"]),
                 "strength": strength,
                 "affordable": row["affordable"],
                 "reasoning": self._generate_reasoning(row, profile)
@@ -497,11 +497,11 @@ class PropertyRecommender:
     def _generate_reasoning(self, row: pd.Series, profile: BuyerProfile) -> str:
         reasons = []
 
-        # Appreciation
-        if row["predicted_appreciation_6m"] >= 5:
-            reasons.append(f"Strong appreciation potential ({row['predicted_appreciation_6m']:.1f}%)")
-        elif row["predicted_appreciation_6m"] >= 3:
-            reasons.append(f"Good appreciation expected ({row['predicted_appreciation_6m']:.1f}%)")
+        appreciation = round(row["predicted_appreciation_6m"])
+        if appreciation >= 5:
+            reasons.append(f"Strong appreciation potential ({appreciation}%)")
+        elif appreciation >= 3:
+            reasons.append(f"Good appreciation expected ({appreciation}%)")
 
         # Affordability
         if row["affordable"]:

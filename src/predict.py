@@ -95,7 +95,8 @@ class PricePredictor:
         current_price: float,
         city: str,
         property_type: str,
-        additional_features: Dict = None
+        additional_features: Dict = None,
+        horizon_months: int = 6
     ) -> Dict:
 
         # Fallback appreciation rates - varied by city and property type
@@ -128,27 +129,28 @@ class PricePredictor:
         }
 
         key = (city, property_type)
-        base_rate = appreciation_rates.get(key, 0.03)
+        annual_rate = appreciation_rates.get(key, 0.03)
 
-        # Try to use ML model if available
+        # Scale rate by horizon (convert annual to horizon-specific)
+        years = horizon_months / 12
+        change_pct = annual_rate * years
+
+        # Add ML adjustment if model available
         use_ml = False
-        change_pct = base_rate
-
         if self.model is not None and self.feature_columns is not None:
             try:
-                from features import FeatureEngineer
-                from ingest import DataIngester
+                from src.features import FeatureEngineer
+                from src.ingest import DataIngester
 
                 ingester = DataIngester()
                 merged = ingester.create_merged_dataset()
 
-                # Filter to the specific city/property type
                 filtered = merged[
                     (merged["city"] == city) &
                     (merged["property_type"] == property_type)
                 ].sort_values("date")
 
-                if len(filtered) >= 12:  # Need at least 12 months for features
+                if len(filtered) >= 12:
                     latest = filtered.iloc[-1:].copy()
                     fe = FeatureEngineer(prediction_horizon=6)
                     featured = fe.create_all_features(latest)
@@ -161,26 +163,28 @@ class PricePredictor:
 
                         current_benchmark = latest["benchmark_price"].values[0]
                         model_rate = (predicted_target - current_benchmark) / current_benchmark
-                        model_rate = max(-0.10, min(0.15, model_rate))  # Clip extremes
+                        model_rate = max(-0.10, min(0.15, model_rate))
 
-                        # Blend: 60% model, 40% historical
-                        change_pct = 0.6 * model_rate + 0.4 * base_rate
+                        # Blend: 60% model, 40% historical, then scale by horizon
+                        blended_annual = 0.6 * model_rate + 0.4 * annual_rate
+                        change_pct = blended_annual * years
                         use_ml = True
 
             except Exception as e:
                 print(f"ML prediction fallback: {e}")
-                change_pct = base_rate
 
         predicted_price = current_price * (1 + change_pct)
 
-        # Uncertainty based on property type volatility
-        volatility_map = {
-            "detached": 0.07,
-            "townhouse": 0.06,
-            "condo": 0.09,
-            "multi_family": 0.065
+        # Uncertainty scales with horizon (sqrt of time)
+        # Base volatility per 6 months, scales with sqrt(horizon/6)
+        base_volatility = {
+            "detached": 0.025,
+            "townhouse": 0.020,
+            "condo": 0.030,
+            "multi_family": 0.022
         }
-        uncertainty = volatility_map.get(property_type, 0.07)
+        base_vol = base_volatility.get(property_type, 0.025)
+        uncertainty = base_vol * np.sqrt(horizon_months / 6)
 
         return {
             "current_price": current_price,
@@ -190,6 +194,7 @@ class PricePredictor:
             "confidence_upper": round(predicted_price * (1 + uncertainty), 0),
             "city": city,
             "property_type": property_type,
+            "horizon_months": horizon_months,
             "uses_ml_model": use_ml
         }
 

@@ -214,13 +214,14 @@ elif page == "Price Predictor":
             index=0
         )
 
-    # Make prediction
     predictor = st.session_state.predictor
 
+    horizon_map = {"6 months": 6, "12 months": 12, "18 months": 18}
     pred = predictor.predict_price_change(
         current_price=current_price,
         city=city,
-        property_type=property_type
+        property_type=property_type,
+        horizon_months=horizon_map.get(time_horizon, 6)
     )
 
     st.markdown("---")
@@ -722,10 +723,10 @@ elif page == "Property Recommender":
             # Display as cards
             for i, rec in enumerate(recommendations, 1):
                 strength_colors = {
-                    "STRONG_BUY": "🟢",
-                    "BUY": "🟡",
-                    "CONSIDER": "🟠",
-                    "PASS": "🔴"
+                    "Excellent Choice": "🟢",
+                    "Great Option": "🟢",
+                    "Worth Considering": "🟡",
+                    "Think Twice": "🟠"
                 }
 
                 with st.container():
@@ -740,10 +741,10 @@ elif page == "Property Recommender":
 
                     with col3:
                         st.metric("Monthly", f"${rec['total_monthly']:,.0f}")
-                        st.metric("Appreciation", f"{rec['predicted_appreciation']:.1f}%")
+                        st.metric("Appreciation", f"{rec['predicted_appreciation']}%")
 
                     with col4:
-                        st.markdown(f"{strength_colors.get(rec['strength'], '')} **{rec['strength'].replace('_', ' ')}**")
+                        st.markdown(f"{strength_colors.get(rec['strength'], '')} **{rec['strength']}**")
 
                     st.markdown(f"*{rec['reasoning']}*")
                     st.divider()

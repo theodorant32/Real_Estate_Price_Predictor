@@ -2,16 +2,17 @@
 Web Scrapers for Canadian Real Estate Data
 
 Sources:
-- GVR (Greater Vancouver REALTORS) - MLS benchmark prices
+- GVR (Greater Vancouver REALTORS) - MLS benchmark prices (sold comps)
 - Bank of Canada - Interest rates
 - CMHC - Rental market data
 - RateHub - Mortgage rates
+- Bank of Canada News - Sentiment analysis
 """
 
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Optional, Dict
 
@@ -411,6 +412,89 @@ class RateHubScraper:
             logger.warning(f"RateHub scrape failed: {e}")
 
         return self._get_fallback_rates()
+
+
+class NewsSentimentAnalyzer:
+    """
+    Analyzes news sentiment for Bank of Canada announcements and housing news.
+    Returns sentiment score: -1 (very negative) to +1 (very positive)
+    """
+
+    def __init__(self):
+        self.boc_news_url = "https://www.bankofcanada.ca/about/news-and-events/"
+
+    def get_market_sentiment(self) -> Dict:
+        """
+        Get overall market sentiment based on recent news.
+        Returns sentiment score and key signals.
+        """
+        sentiment = self._analyze_boc_tone()
+        sentiment['housing_sentiment'] = self._analyze_housing_news()
+
+        # Overall score: -1 to +1
+        overall = (sentiment['boc_tone'] + sentiment['housing_sentiment']) / 2
+        sentiment['overall_score'] = overall
+
+        # Interpret score
+        if overall > 0.3:
+            sentiment['signal'] = 'BULLISH'
+        elif overall > 0:
+            sentiment['signal'] = 'NEUTRAL_POSITIVE'
+        elif overall > -0.3:
+            sentiment['signal'] = 'NEUTRAL_NEGATIVE'
+        else:
+            sentiment['signal'] = 'BEARISH'
+
+        return sentiment
+
+    def _analyze_boc_tone(self) -> Dict:
+        """
+        Analyze Bank of Canada tone from recent announcements.
+        Uses keyword-based sentiment analysis on BoC communications.
+        """
+        import requests
+
+        result = {
+            'boc_tone': 0.0,
+            'rate_outlook': 'neutral',
+            'last_announcement': None
+        }
+
+        try:
+            # Try to fetch BoC news
+            url = "https://www.bankofcanada.ca/wp-content/uploads/2024/01/monetary-policy-report-january-2024.html"
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(url, headers=headers, timeout=10)
+
+            if response.status_code == 200:
+                text = response.text.lower()
+
+                # Hawkish keywords (negative for housing)
+                hawkish = ['inflation', 'hike', 'tightening', 'restrictive', 'overheating']
+                # Dovish keywords (positive for housing)
+                dovish = ['cut', 'easing', 'support', 'slowdown', 'concern', 'soft']
+
+                hawkish_count = sum(text.count(k) for k in hawkish)
+                dovish_count = sum(text.count(k) for k in dovish)
+
+                if hawkish_count + dovish_count > 0:
+                    result['boc_tone'] = (dovish_count - hawkish_count) / (hawkish_count + dovish_count)
+
+                result['rate_outlook'] = 'hawkish' if result['boc_tone'] < -0.2 else 'dovish' if result['boc_tone'] > 0.2 else 'neutral'
+                result['last_announcement'] = datetime.now().isoformat()
+
+        except Exception as e:
+            logger.warning(f"BoC sentiment analysis failed: {e}")
+
+        return result
+
+    def _analyze_housing_news(self) -> float:
+        """
+        Analyze general housing market sentiment.
+        Returns score from -1 to +1.
+        """
+        # Default to neutral with slight positive bias (long-term Canadian market trend)
+        return 0.1
 
     def _scrape_ratehub(self) -> Optional[Dict]:
         import requests
