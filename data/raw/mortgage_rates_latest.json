@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-04-05T19:49:20.777864",
+  "rates_by_term": {
+    "1_year": {
+      "posted": 5.89,
+      "special": 5.25
+    },
+    "2_year": {
+      "posted": 5.49,
+      "special": 4.99
+    },
+    "3_year": {
+      "posted": 5.29,
+      "special": 4.89
+    },
+    "5_year": {
+      "posted": 5.09,
+      "special": 4.59
+    },
+    "7_year": {
+      "posted": 5.19,
+      "special": 4.79
+    },
+    "10_year": {
+      "posted": 5.09,
+      "special": 4.69
+    }
+  },
+  "rates_by_type": {
+    "fixed_5yr": 4.59,
+    "variable_5yr": 4.95,
+    "adjustable_5yr": 4.85
+  },
+  "lender_rates": [
+    {
+      "lender": "TD",
+      "rate_5yr": 4.64,
+      "type": "fixed"
+    },
+    {
+      "lender": "RBC",
+      "rate_5yr": 4.59,
+      "type": "fixed"
+    },
+    {
+      "lender": "Scotia",
+      "rate_5yr": 4.69,
+      "type": "fixed"
+    },
+    {
+      "lender": "BMO",
+      "rate_5yr": 4.64,
+      "type": "fixed"
+    },
+    {
+      "lender": "CIBC",
+      "rate_5yr": 4.59,
+      "type": "fixed"
+    },
+    {
+      "lender": "MCAP",
+      "rate_5yr": 4.49,
+      "type": "fixed"
+    },
+    {
+      "lender": "First National",
+      "rate_5yr": 4.55,
+      "type": "fixed"
+    }
+  ]
+}

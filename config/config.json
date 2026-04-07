@@ -1,0 +1,160 @@
+{
+  "paths": {
+    "project_root": "C:\\Users\\theot\\OneDrive\\Desktop\\Personal Projects\\Propra",
+    "data_dir": "C:\\Users\\theot\\OneDrive\\Desktop\\Personal Projects\\Propra\\data",
+    "models_dir": "C:\\Users\\theot\\OneDrive\\Desktop\\Personal Projects\\Propra\\models",
+    "logs_dir": "C:\\Users\\theot\\OneDrive\\Desktop\\Personal Projects\\Propra\\logs"
+  },
+  "tax_constants": {
+    "ptt_tiers": [
+      [
+        200000,
+        0.01
+      ],
+      [
+        2000000,
+        0.02
+      ],
+      [
+        Infinity,
+        0.03
+      ]
+    ],
+    "foreign_buyer_tax_rate": 0.2,
+    "speculation_tax_rate": 0.005,
+    "empty_homes_tax_rate": 0.03,
+    "property_tax_rate": 0.003,
+    "cmhc_rates": [
+      [
+        0.2,
+        0.0
+      ],
+      [
+        0.15,
+        0.028
+      ],
+      [
+        0.1,
+        0.031
+      ],
+      [
+        0.05,
+        0.04
+      ]
+    ],
+    "fttb_ptt_exemption_max_price": 835000,
+    "fttb_ptt_partial_exemption_max": 860000,
+    "fhsa_annual_limit": 8000,
+    "fhsa_lifetime_limit": 40000,
+    "gst_rate": 0.05,
+    "gst_rebate_max_price": 450000,
+    "gst_rebate_phase_out_max": 475000
+  },
+  "cmhc_guidelines": {
+    "max_gds_ratio": 0.32,
+    "max_tds_ratio": 0.4,
+    "stress_test_rate": 0.0525,
+    "stress_test_addition": 0.02,
+    "min_down_payment_pct": 0.05,
+    "mandatory_insurance_threshold": 0.2,
+    "max_amortization_insured": 25,
+    "max_amortization_uninsured": 30
+  },
+  "model_config": {
+    "n_estimators": 500,
+    "learning_rate": 0.05,
+    "max_depth": 6,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "early_stopping_rounds": 50,
+    "n_cv_splits": 5,
+    "prediction_horizon_months": 6,
+    "min_training_samples": 100,
+    "min_features": 10,
+    "retrain_frequency_days": 7,
+    "min_new_data_points": 30,
+    "performance_drop_threshold": 0.2
+  },
+  "data_sources": {
+    "gvr": {
+      "name": "Greater Vancouver REALTORS",
+      "url": "https://www.greatervancouverrealtors.com/market-watch/market-reports",
+      "format": "CSV/PDF",
+      "frequency": "monthly",
+      "fields": [
+        "date",
+        "city",
+        "property_type",
+        "benchmark_price",
+        "sales",
+        "new_listings",
+        "active_listings",
+        "days_on_market"
+      ]
+    },
+    "cmhc": {
+      "name": "CMHC Rental Market Survey",
+      "url": "https://cmhc-schl.gc.ca",
+      "format": "CSV",
+      "frequency": "annual",
+      "fields": [
+        "date",
+        "city",
+        "bedroom_type",
+        "avg_rent",
+        "vacancy_rate"
+      ]
+    },
+    "boc": {
+      "name": "Bank of Canada",
+      "url": "https://www.bankofcanada.ca/rates/interest-rates/canadian-interest-rates/",
+      "format": "CSV",
+      "frequency": "daily",
+      "fields": [
+        "date",
+        "overnight_rate",
+        "prime_rate",
+        "mortgage_rate_5yr_fixed"
+      ]
+    },
+    "statscan": {
+      "name": "Statistics Canada",
+      "url": "https://www150.statcan.gc.ca",
+      "format": "CSV",
+      "frequency": "quarterly",
+      "fields": [
+        "date",
+        "city",
+        "population_growth_yoy",
+        "housing_starts",
+        "unemployment_rate"
+      ]
+    },
+    "ratehub": {
+      "name": "Ratehub.ca (Mortgage Rates)",
+      "url": "https://www.ratehub.ca",
+      "format": "HTML",
+      "frequency": "daily",
+      "fields": [
+        "lender",
+        "rate_type",
+        "term",
+        "rate",
+        "special_rate"
+      ]
+    }
+  },
+  "cities": [
+    "Vancouver",
+    "Burnaby",
+    "Richmond",
+    "North Vancouver",
+    "Toronto",
+    "Calgary"
+  ],
+  "property_types": [
+    "condo",
+    "townhouse",
+    "detached"
+  ]
+}
