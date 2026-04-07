@@ -1,0 +1,64 @@
+# ML Pipeline - Weekly Retraining
+# Runs every Sunday at 2 AM UTC
+# Free tier: 2,000 minutes/month for private repos, unlimited for public
+
+name: ML Pipeline - Weekly Retraining
+
+on:
+  schedule:
+    # Every Sunday at 2:00 AM UTC (adjust for your timezone)
+    # Use cron converter: https://crontab.guru/
+    - cron: '0 2 * * 0'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+  # Also run on push to main
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'data/**'
+      - 'requirements.txt'
+
+jobs:
+  train-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run ML Pipeline
+      run: |
+        python src/pipeline.py --min-improvement 0.02
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+
+    - name: Upload model artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: model-${{ github.sha }}
+        path: |
+          models/*.json
+          logs/pipeline.log
+        retention-days: 30
+
+    - name: Commit and push if model improved
+      uses: stefanzweifel/git-auto-commit-action@v5
+      if: success()
+      with:
+        commit_message: '[ci] Update model and data'
+        file_pattern: 'models/*.json data/processed/*.csv logs/*.json'

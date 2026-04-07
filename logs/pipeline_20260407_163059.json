@@ -1,0 +1,54 @@
+{
+  "started_at": "2026-04-07T16:30:56.443701",
+  "status": "completed",
+  "steps": {
+    "ingestion": {
+      "status": "success",
+      "records": {
+        "gvr": 1368,
+        "cmhc": 72,
+        "boc": 76,
+        "statscan": 150
+      }
+    },
+    "merge": {
+      "status": "success",
+      "shape": [
+        1368,
+        19
+      ],
+      "date_range": [
+        "2020-01-01 00:00:00",
+        "2026-04-01 00:00:00"
+      ]
+    },
+    "features": {
+      "status": "success",
+      "shape": [
+        1368,
+        86
+      ],
+      "feature_count": 79
+    },
+    "training": {
+      "status": "success",
+      "version": "v20260407_163057",
+      "cv_rmse": 91194.52928100481,
+      "cv_mape": 0.05649325857654062,
+      "holdout_rmse": 47997.80924725766,
+      "holdout_mape": 0.033145546970529925,
+      "holdout_r2": 0.9872651086252389
+    },
+    "validation": {
+      "status": "success",
+      "should_deploy": true,
+      "reason": "Performance similar to current - deploying for freshness"
+    }
+  },
+  "deployment": {
+    "status": "deployed",
+    "version": "v20260407_163057",
+    "reason": "Performance similar to current - deploying for freshness"
+  },
+  "completed_at": "2026-04-07T16:30:59.406762"
+}

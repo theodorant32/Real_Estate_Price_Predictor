@@ -21,6 +21,10 @@ class BuyVsRentInputs:
     maintenance_rate: float = 0.01  # 1% of value per year
     home_insurance_monthly: float = 100
 
+    # Rental income (for multi-family or mortgage helper)
+    monthly_rental_income: float = 0  # Income from secondary suite, laneway house, or multi-unit
+    rental_income_vacancy_rate: float = 0.05  # 5% vacancy buffer
+
     # Rental alternative
     monthly_rent: float = 2500
     rent_inflation_rate: float = 0.03  # 3% annual
@@ -206,9 +210,15 @@ class BuyVsRentCalculator:
             maintenance = property_value * inputs.maintenance_rate
             insurance = inputs.home_insurance_monthly * 12
 
+            # Rental income (for multi-family or mortgage helper)
+            effective_rental_income = (
+                inputs.monthly_rental_income * 12 *
+                (1 - inputs.rental_income_vacancy_rate)
+            )
+
             total_annual_cost = (
                 annual_mortgage + property_tax + strata_fees +
-                maintenance + insurance
+                maintenance + insurance - effective_rental_income
             )
 
             # Equity built
@@ -452,7 +462,16 @@ def quick_analysis(
     strata_defaults = {
         "condo": 500,
         "townhouse": 350,
-        "detached": 0
+        "detached": 0,
+        "multi_family": 150
+    }
+
+    # Default rental income potential by property type (monthly)
+    rental_income_defaults = {
+        "condo": 0,
+        "townhouse": 0,
+        "detached": 1500,  # Basement suite potential
+        "multi_family": 2500  # Additional unit(s)
     }
 
     # Calculate down payment (20% default)
@@ -468,7 +487,8 @@ def quick_analysis(
         strata_fee_monthly=strata_defaults.get(property_type, 0),
         monthly_rent=monthly_rent,
         time_horizon_years=time_horizon_years,
-        appreciation_rate=appreciation_rate
+        appreciation_rate=appreciation_rate,
+        monthly_rental_income=rental_income_defaults.get(property_type, 0)
     )
 
     calculator = BuyVsRentCalculator()

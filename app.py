@@ -102,8 +102,8 @@ if page == "Home":
     with col2:
         st.metric(
             label="Property Types",
-            value="3",
-            help="Detached, Townhouse, Condo"
+            value="4",
+            help="Detached, Townhouse, Condo, Multi-family"
         )
 
     with col3:
@@ -154,6 +154,7 @@ if page == "Home":
         {"city": "Vancouver", "property_type": "condo", "current_price": 750000},
         {"city": "Burnaby", "property_type": "townhouse", "current_price": 950000},
         {"city": "Calgary", "property_type": "detached", "current_price": 650000},
+        {"city": "Toronto", "property_type": "multi_family", "current_price": 1200000},
     ]
 
     sample_data = []
@@ -194,7 +195,7 @@ elif page == "Price Predictor":
 
         property_type = st.selectbox(
             "Property Type",
-            ["condo", "townhouse", "detached"],
+            ["condo", "townhouse", "detached", "multi_family"],
             index=0
         )
 
@@ -341,7 +342,7 @@ elif page == "Buy vs Rent":
 
         property_type = st.selectbox(
             "Property Type",
-            ["condo", "townhouse", "detached"],
+            ["condo", "townhouse", "detached", "multi_family"],
             key="bvr_type"
         )
 
@@ -625,8 +626,8 @@ elif page == "Property Recommender":
 
         property_types = st.multiselect(
             "Property Types to Consider",
-            ["condo", "townhouse", "detached"],
-            default=["condo", "townhouse", "detached"]
+            ["condo", "townhouse", "detached", "multi_family"],
+            default=["condo", "townhouse", "detached", "multi_family"]
         )
 
     # Run recommendations
@@ -881,12 +882,4 @@ elif page == "Market Comparison":
 # =============================================================================
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("""
-<small>
-Data sources: GVR, CMHC, Bank of Canada, Statistics Canada
-
-Model: XGBoost with time-series cross-validation
-
-⚠️ This tool is for informational purposes only. Not financial advice.
-</small>
-""")
+st.sidebar.markdown("⚠️ Not financial advice. For informational purposes only.")

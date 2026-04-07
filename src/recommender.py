@@ -25,7 +25,7 @@ class BuyerProfile:
 
     # Property preferences
     min_bedrooms: int = 1
-    property_types: List[str] = None  # Options: condo, townhouse, detached
+    property_types: List[str] = None  # Options: condo, townhouse, detached, multi_family
 
     # First-time buyer status (affects taxes, CMHC, FHSA)
     is_first_time_buyer: bool = True  # Never owned a home in past 5 years
@@ -35,7 +35,7 @@ class BuyerProfile:
 
     def __post_init__(self):
         if self.property_types is None:
-            self.property_types = ["condo", "townhouse", "detached"]
+            self.property_types = ["condo", "townhouse", "detached", "multi_family"]
 
         # Default max payment to 32% of gross income (CMHC guideline)
         if self.max_monthly_payment is None:
@@ -227,21 +227,27 @@ class PropertyRecommender:
             ("Vancouver", "condo"): 750000,
             ("Vancouver", "townhouse"): 950000,
             ("Vancouver", "detached"): 1800000,
+            ("Vancouver", "multi_family"): 1400000,
             ("Burnaby", "condo"): 620000,
             ("Burnaby", "townhouse"): 850000,
             ("Burnaby", "detached"): 1500000,
+            ("Burnaby", "multi_family"): 1150000,
             ("Richmond", "condo"): 580000,
             ("Richmond", "townhouse"): 800000,
             ("Richmond", "detached"): 1400000,
+            ("Richmond", "multi_family"): 1100000,
             ("North Vancouver", "condo"): 650000,
             ("North Vancouver", "townhouse"): 900000,
             ("North Vancouver", "detached"): 1700000,
+            ("North Vancouver", "multi_family"): 1300000,
             ("Toronto", "condo"): 700000,
             ("Toronto", "townhouse"): 900000,
             ("Toronto", "detached"): 1600000,
+            ("Toronto", "multi_family"): 1200000,
             ("Calgary", "condo"): 320000,
             ("Calgary", "townhouse"): 450000,
             ("Calgary", "detached"): 650000,
+            ("Calgary", "multi_family"): 550000,
         }
 
         self.affordability_calc = AffordabilityCalculator()
@@ -293,8 +299,8 @@ class PropertyRecommender:
                     25
                 )
 
-                # Estimate strata by property type
-                strata_est = {"condo": 500, "townhouse": 350, "detached": 0}.get(ptype, 0)
+                # Estimate strata by property type (multi_family has lower strata, often none)
+                strata_est = {"condo": 500, "townhouse": 350, "detached": 0, "multi_family": 150}.get(ptype, 0)
 
                 # Total monthly housing cost
                 property_tax = price * 0.003 / 12
@@ -336,21 +342,27 @@ class PropertyRecommender:
             ("Vancouver", "condo"): 2.0,
             ("Vancouver", "townhouse"): 4.0,
             ("Vancouver", "detached"): 3.0,
+            ("Vancouver", "multi_family"): 4.5,
             ("Burnaby", "condo"): 3.0,
             ("Burnaby", "townhouse"): 5.0,
             ("Burnaby", "detached"): 4.0,
+            ("Burnaby", "multi_family"): 5.5,
             ("Richmond", "condo"): 2.0,
             ("Richmond", "townhouse"): 3.0,
             ("Richmond", "detached"): 2.5,
+            ("Richmond", "multi_family"): 3.5,
             ("North Vancouver", "condo"): 3.0,
             ("North Vancouver", "townhouse"): 4.0,
             ("North Vancouver", "detached"): 4.0,
+            ("North Vancouver", "multi_family"): 4.5,
             ("Toronto", "condo"): 2.0,
             ("Toronto", "townhouse"): 4.0,
             ("Toronto", "detached"): 3.0,
+            ("Toronto", "multi_family"): 4.5,
             ("Calgary", "condo"): 4.0,
             ("Calgary", "townhouse"): 6.0,
             ("Calgary", "detached"): 5.0,
+            ("Calgary", "multi_family"): 6.5,
         }
         return estimates.get((city, property_type), 3.0)
 
@@ -506,6 +518,8 @@ class PropertyRecommender:
             reasons.append("Balance of space and affordability")
         elif row["property_type"] == "detached":
             reasons.append("Maximum land value, best long-term appreciation")
+        elif row["property_type"] == "multi_family":
+            reasons.append("Rental income potential from additional units")
 
         return "; ".join(reasons)
 

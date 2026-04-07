@@ -227,7 +227,7 @@ CITIES = [
     "Calgary"
 ]
 
-PROPERTY_TYPES = ["condo", "townhouse", "detached"]
+PROPERTY_TYPES = ["condo", "townhouse", "detached", "multi_family"]
 
 # City-specific metadata
 CITY_METADATA = {
@@ -236,42 +236,48 @@ CITY_METADATA = {
         "region": "Lower Mainland",
         "population": 675218,
         "avg_price_detached": 1800000,
-        "avg_price_condo": 750000
+        "avg_price_condo": 750000,
+        "avg_price_multi_family": 1400000
     },
     "Burnaby": {
         "province": "BC",
         "region": "Lower Mainland",
         "population": 249125,
         "avg_price_detached": 1500000,
-        "avg_price_condo": 620000
+        "avg_price_condo": 620000,
+        "avg_price_multi_family": 1150000
     },
     "Richmond": {
         "province": "BC",
         "region": "Lower Mainland",
         "population": 209937,
         "avg_price_detached": 1400000,
-        "avg_price_condo": 580000
+        "avg_price_condo": 580000,
+        "avg_price_multi_family": 1100000
     },
     "North Vancouver": {
         "province": "BC",
         "region": "Lower Mainland",
         "population": 88168,
         "avg_price_detached": 1700000,
-        "avg_price_condo": 650000
+        "avg_price_condo": 650000,
+        "avg_price_multi_family": 1300000
     },
     "Toronto": {
         "province": "ON",
         "region": "GTA",
         "population": 2794356,
         "avg_price_detached": 1600000,
-        "avg_price_condo": 700000
+        "avg_price_condo": 700000,
+        "avg_price_multi_family": 1200000
     },
     "Calgary": {
         "province": "AB",
         "region": "Calgary Region",
         "population": 1336000,
         "avg_price_detached": 650000,
-        "avg_price_condo": 320000
+        "avg_price_condo": 320000,
+        "avg_price_multi_family": 550000
     }
 }
 

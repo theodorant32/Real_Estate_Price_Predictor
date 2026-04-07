@@ -5,13 +5,8 @@ ML-powered property price forecasting (6-month horizon) with buy-vs-rent analysi
 ## Quick Start
 
 ```bash
-# Install
 pip install -r requirements.txt
-
-# Run pipeline
-python src/ingest.py && python src/features.py && python src/train.py
-
-# Dashboard
+python src/pipeline.py
 streamlit run app.py
 ```
 
@@ -20,60 +15,87 @@ streamlit run app.py
 | Feature | Description |
 |---------|-------------|
 | **Price Prediction** | XGBoost model predicting prices 6 months ahead |
-| **Buy vs Rent** | Canadian-specific calculator (PTT, CMHC, strata) |
-| **Market Comparison** | Compare cities with buy/hold/sell recommendations |
-| **Property Recommender** | Budget-based recommendations with CMHC affordability |
+| **Buy vs Rent** | Canadian-specific calculator (BC PTT, CMHC, strata fees) |
+| **Market Comparison** | City-by-city analysis with buy/hold/sell signals |
+| **Property Recommender** | Budget-based recommendations with CMHC affordability rules |
 
 ## Coverage
 
 - **Cities**: Vancouver, Burnaby, Richmond, North Vancouver, Toronto, Calgary
-- **Property Types**: Detached, Townhouse, Condo
+- **Property Types**: Detached, Townhouse, Condo, Multi-family (duplex/triplex/fourplex)
 
-## Model Details
+## Model Performance
 
-**Validation**: Purged time-series CV (5 folds, 6-month embargo) + holdout test set
+| Metric | Value |
+|--------|-------|
+| CV RMSE | ~$91,000 |
+| CV MAPE | ~5.6% |
+| Holdout R² | ~0.987 |
 
-**Regularization**: L1/L2, max_depth=4, dropout via colsample
+## Automated Pipeline
 
-**Metrics**: RMSE, MAPE, R², directional accuracy
+Weekly retraining via GitHub Actions:
+- **Sunday 2 AM UTC**: Full model retraining
+- **Daily 3 AM UTC**: Data refresh
 
-```python
-from src.predict import PricePredictor
-
-predictor = PricePredictor()
-predictor.load_model()
-pred = predictor.predict_price_change(
-    current_price=750000,
-    city="Vancouver",
-    property_type="condo"
-)
+```bash
+# Manual run
+python src/pipeline.py --force-refresh
 ```
 
 ## Project Structure
 
 ```
 ├── src/
-│   ├── ingest.py      # Data ingestion
-│   ├── features.py    # Feature engineering
-│   ├── train.py       # Model training (with CV + holdout)
-│   ├── predict.py     # Inference
+│   ├── scrapers.py    # Web scrapers (GVR, BoC, CMHC, RateHub)
+│   ├── ingest.py      # Data ingestion pipeline
+│   ├── features.py    # Feature engineering (62 features)
+│   ├── train.py       # Model training with time-series CV
+│   ├── predict.py     # Inference with ML model
+│   ├── pipeline.py    # Automated ML pipeline
 │   ├── buy_vs_rent.py # Financial calculator
-│   └── recommender.py # Recommendations
+│   └── recommender.py # Property recommendations
 ├── data/
-│   ├── raw/           # Source data
-│   └── processed/     # Cleaned data
-├── models/            # Saved models + metrics
+│   ├── raw/           # Source data (CSV)
+│   └── processed/     # Merged + featured data
+├── models/            # Saved XGBoost models
+├── .github/workflows/ # CI/CD for automated retraining
 └── app.py             # Streamlit dashboard
 ```
 
 ## Data Sources
 
-- GVR (benchmark prices), CMHC (rental data), Bank of Canada (rates), Statistics Canada
+| Source | Data Type | Access |
+|--------|-----------|--------|
+| GVR | MLS benchmark prices | Web scrape / fallback |
+| Bank of Canada | Interest rates | API v2 |
+| CMHC | Rental market survey | Fallback (login required) |
+| RateHub | Mortgage rates | Web scrape |
 
-## Disclaimer
+## API Usage
 
-For informational purposes only. Not financial advice.
+```python
+from src.predict import PricePredictor
+from src.recommender import PropertyRecommender, BuyerProfile
+
+predictor = PricePredictor()
+predictor.load_model()
+
+pred = predictor.predict_price_change(
+    current_price=750000,
+    city="Vancouver",
+    property_type="condo"
+)
+
+recommender = PropertyRecommender()
+profile = BuyerProfile(annual_income=100000, available_down_payment=150000)
+recs = recommender.get_top_recommendations(profile, n=5)
+```
 
 ## License
 
 MIT
+
+## Disclaimer
+
+For informational purposes only. Not financial advice.

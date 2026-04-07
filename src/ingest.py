@@ -1,11 +1,7 @@
-import os
-import io
-import requests
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
-from bs4 import BeautifulSoup
 
 
 class DataIngester:
@@ -16,33 +12,22 @@ class DataIngester:
         self.raw_dir.mkdir(parents=True, exist_ok=True)
         self.processed_dir.mkdir(parents=True, exist_ok=True)
 
-        # Cities we track
         self.cities = [
             "Vancouver", "Burnaby", "Richmond", "North Vancouver",
             "Toronto", "Calgary"
         ]
 
-        # Property types
-        self.property_types = ["detached", "townhouse", "condo"]
-
-    # =========================================================================
-    # GVR Data - Greater Vancouver REALTORS
-    # =========================================================================
+        self.property_types = ["detached", "townhouse", "condo", "multi_family"]
 
     def fetch_gvr_data(self, save: bool = True) -> pd.DataFrame:
+        from scrapers import GVRScraper
+
         print("Fetching GVR benchmark price data...")
-
-        # Try to load cached data first
-        cached_path = self.raw_dir / "gvr_benchmark.csv"
-        if cached_path.exists():
-            print(f"  Loading cached GVR data from {cached_path}")
-            return pd.read_csv(cached_path, parse_dates=["date"])
-
-        # Generate realistic historical data based on actual GVR reports
-        # This is a placeholder - in production you'd scrape the actual data
-        data = self._generate_gvr_placeholder()
+        scraper = GVRScraper()
+        data = scraper.fetch_data()
 
         if save:
+            cached_path = self.raw_dir / "gvr_benchmark.csv"
             data.to_csv(cached_path, index=False)
             print(f"  Saved GVR data to {cached_path}")
 
@@ -52,25 +37,32 @@ class DataIngester:
         import numpy as np
 
         # Base prices by city and property type (Jan 2020 levels, approximate)
+        # Multi-family priced between townhouse and detached (typically 10-15% below detached)
         base_prices = {
             ("Vancouver", "detached"): 1_800_000,
             ("Vancouver", "townhouse"): 950_000,
             ("Vancouver", "condo"): 720_000,
+            ("Vancouver", "multi_family"): 1_550_000,
             ("Burnaby", "detached"): 1_500_000,
             ("Burnaby", "townhouse"): 850_000,
             ("Burnaby", "condo"): 620_000,
+            ("Burnaby", "multi_family"): 1_280_000,
             ("Richmond", "detached"): 1_400_000,
             ("Richmond", "townhouse"): 800_000,
             ("Richmond", "condo"): 580_000,
+            ("Richmond", "multi_family"): 1_180_000,
             ("North Vancouver", "detached"): 1_700_000,
             ("North Vancouver", "townhouse"): 900_000,
             ("North Vancouver", "condo"): 650_000,
+            ("North Vancouver", "multi_family"): 1_450_000,
             ("Toronto", "detached"): 1_600_000,
             ("Toronto", "townhouse"): 900_000,
             ("Toronto", "condo"): 700_000,
+            ("Toronto", "multi_family"): 1_350_000,
             ("Calgary", "detached"): 650_000,
             ("Calgary", "townhouse"): 450_000,
             ("Calgary", "condo"): 320_000,
+            ("Calgary", "multi_family"): 550_000,
         }
 
         # Generate monthly data from Jan 2020 to present
@@ -150,21 +142,15 @@ class DataIngester:
 
         return pd.DataFrame(records)
 
-    # =========================================================================
-    # CMHC Data - Rental Market Survey
-    # =========================================================================
-
     def fetch_cmhc_data(self, save: bool = True) -> pd.DataFrame:
+        from scrapers import CMHCScraper
+
         print("Fetching CMHC rental market data...")
-
-        cached_path = self.raw_dir / "cmhc_rental.csv"
-        if cached_path.exists():
-            print(f"  Loading cached CMHC data from {cached_path}")
-            return pd.read_csv(cached_path, parse_dates=["date"])
-
-        data = self._generate_cmhc_placeholder()
+        scraper = CMHCScraper()
+        data = scraper.fetch_data()
 
         if save:
+            cached_path = self.raw_dir / "cmhc_rental.csv"
             data.to_csv(cached_path, index=False)
             print(f"  Saved CMHC data to {cached_path}")
 
@@ -240,21 +226,15 @@ class DataIngester:
 
         return pd.DataFrame(records)
 
-    # =========================================================================
-    # Bank of Canada Data - Interest Rates
-    # =========================================================================
-
     def fetch_boc_data(self, save: bool = True) -> pd.DataFrame:
+        from scrapers import BankOfCanadaScraper
+
         print("Fetching Bank of Canada rate data...")
-
-        cached_path = self.raw_dir / "boc_rates.csv"
-        if cached_path.exists():
-            print(f"  Loading cached BoC data from {cached_path}")
-            return pd.read_csv(cached_path, parse_dates=["date"])
-
-        data = self._generate_boc_placeholder()
+        scraper = BankOfCanadaScraper()
+        data = scraper.fetch_data()
 
         if save:
+            cached_path = self.raw_dir / "boc_rates.csv"
             data.to_csv(cached_path, index=False)
             print(f"  Saved BoC data to {cached_path}")
 
@@ -326,10 +306,6 @@ class DataIngester:
             })
 
         return pd.DataFrame(records)
-
-    # =========================================================================
-    # Statistics Canada Data
-    # =========================================================================
 
     def fetch_statscan_data(self, save: bool = True) -> pd.DataFrame:
         print("Fetching Statistics Canada data...")

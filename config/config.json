@@ -155,6 +155,7 @@
   "property_types": [
     "condo",
     "townhouse",
-    "detached"
+    "detached",
+    "multi_family"
   ]
 }
