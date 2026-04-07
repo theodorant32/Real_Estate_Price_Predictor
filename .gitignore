@@ -40,3 +40,7 @@ Thumbs.db
 
 # Claude Code
 .claude/
+".claude" 
+"__pycache__/" 
+"*.pyc" 
+".env" 
