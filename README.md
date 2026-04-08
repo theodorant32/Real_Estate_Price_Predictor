@@ -99,3 +99,4 @@ MIT
 ## Disclaimer
 
 For informational purposes only. Not financial advice.
+ECHO is on.
