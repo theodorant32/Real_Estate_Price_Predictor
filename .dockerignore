@@ -1,0 +1,11 @@
+.git
+.gitignore
+*.md
+__pycache__/
+*.pyc
+.env
+data/raw/*.csv
+data/processed/*.csv
+models/*.json
+logs/
+.claude/
