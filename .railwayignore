@@ -1,0 +1,4 @@
+# Railway ignore file
+# Models are needed for production
+!.gitignore
+!models/
