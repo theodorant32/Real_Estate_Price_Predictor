@@ -6,6 +6,8 @@ ML-powered property price forecasting with buy-vs-rent analysis for Canadian mar
 
 **Try it now:** [https://propra-production.up.railway.app](https://propra-production.up.railway.app)
 
+*Note: First load may take 30-60 seconds as Railway spins up from free tier sleep.*
+
 ## Quick Start
 
 ```bash
@@ -105,7 +107,13 @@ recs = recommender.get_top_recommendations(profile, n=5)
 1. Go to https://railway.app/new
 2. Select "Deploy from GitHub repo"
 3. Choose this repo
-4. Deploy
+4. Click **Deploy** → Wait for build
+5. Click **Generate Domain** to get your public URL
+6. Your app is live at `https://your-app-production.up.railway.app`
+
+**Find your Railway URL anytime:**
+- Railway Dashboard → Select project → Click **Settings** or **Deploy** tab
+- URL shown at top, or click the globe icon to open
 
 ### Hugging Face Spaces (Free)
 
