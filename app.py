@@ -25,11 +25,23 @@ st.set_page_config(
 def load_model():
     # Use absolute path based on app.py location (works on Railway)
     model_dir = str(Path(__file__).parent / "models")
+    print(f"DEBUG: Model dir: {model_dir}")
+
+    # List files in model dir
+    import os
+    try:
+        files = os.listdir(model_dir)
+        print(f"DEBUG: Model files: {files}")
+    except Exception as e:
+        print(f"DEBUG: Cannot list model dir: {e}")
+
     predictor = PricePredictor(model_dir=model_dir)
     try:
         predictor.load_model()
+        print("DEBUG: Model loaded successfully")
         return predictor, True
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        print(f"DEBUG: Model not found: {e}")
         return predictor, False
 
 
