@@ -20,8 +20,8 @@ ENV/
 data/raw/*.csv
 data/processed/*.csv
 
-# Models
-models/*.json
+# Models - keep trained models, ignore raw checkpoints
+models/*_staging*.json
 models/*.pkl
 
 # Jupyter

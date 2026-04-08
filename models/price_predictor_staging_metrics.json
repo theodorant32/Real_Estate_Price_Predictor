@@ -1,0 +1,67 @@
+{
+  "cv_results": {
+    "avg_rmse": 153492.6087132666,
+    "avg_mape": 0.16354821170061568,
+    "rmse_by_city": {
+      "Richmond": 232561.0391221962,
+      "Toronto": 56826.69219431735,
+      "North Vancouver": 141645.45853486005,
+      "Calgary": 241280.15745842064,
+      "Vancouver": 95149.69625653884
+    },
+    "rmse_by_property_type": {
+      "detached": 177557.67346677202,
+      "condo": 113293.70366356234,
+      "townhouse": 77667.57062205425
+    },
+    "fold_metrics": [
+      {
+        "fold": 1,
+        "train_size": 147,
+        "val_size": 147,
+        "rmse": 241280.15745842064,
+        "mape": 0.5042625056951683
+      },
+      {
+        "fold": 2,
+        "train_size": 294,
+        "val_size": 147,
+        "rmse": 141645.45853486005,
+        "mape": 0.07441856606971332
+      },
+      {
+        "fold": 3,
+        "train_size": 441,
+        "val_size": 147,
+        "rmse": 232561.0391221962,
+        "mape": 0.14125863641986872
+      },
+      {
+        "fold": 4,
+        "train_size": 588,
+        "val_size": 147,
+        "rmse": 56826.69219431735,
+        "mape": 0.04235404041159461
+      },
+      {
+        "fold": 5,
+        "train_size": 735,
+        "val_size": 147,
+        "rmse": 95149.69625653884,
+        "mape": 0.05544730990673341
+      }
+    ]
+  },
+  "model_params": {
+    "n_estimators": 500,
+    "learning_rate": 0.05,
+    "max_depth": 6,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "early_stopping_rounds": 50,
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "n_samples": 882,
+  "n_features": 62
+}

@@ -1,0 +1,157 @@
+{
+  "cv_results": {
+    "avg_rmse": 91194.52928100481,
+    "avg_mape": 0.05649325857654062,
+    "avg_r2": -12.466919487506617,
+    "avg_directional_accuracy": null,
+    "rmse_by_city": {
+      "Vancouver": 22460.526144783893,
+      "Toronto": 46963.65024773038,
+      "Richmond": 170076.8020912246,
+      "North Vancouver": 46394.86583006058
+    },
+    "rmse_by_property_type": {
+      "detached": 176904.80073760165,
+      "townhouse": 39851.259392518434,
+      "condo": 22460.526144783893
+    },
+    "overall_cv_metrics": {
+      "rmse": 141510.6927300851,
+      "mae": 74675.30416666667,
+      "mape": 0.05649325857654061,
+      "r2": 0.8566492002997625,
+      "mean_prediction_error": -40709.691666666666,
+      "prediction_bias": -18573.96875
+    },
+    "fold_metrics": [
+      {
+        "fold": 1,
+        "train_size": 405,
+        "val_size": 12,
+        "rmse": 46394.86583006058,
+        "mae": 43471.677083333336,
+        "mape": 0.045093209270927935,
+        "r2": -7.531100238675219,
+        "directional_accuracy": null
+      },
+      {
+        "fold": 2,
+        "train_size": 486,
+        "val_size": 12,
+        "rmse": 306845.9512274729,
+        "mae": 233874.77083333334,
+        "mape": 0.14876792802966435,
+        "r2": -50.18425567046606,
+        "directional_accuracy": null
+      },
+      {
+        "fold": 3,
+        "train_size": 567,
+        "val_size": 12,
+        "rmse": 33307.652954976285,
+        "mae": 30796.083333333332,
+        "mape": 0.03589728186488012,
+        "r2": -4.211692228029461,
+        "directional_accuracy": null
+      },
+      {
+        "fold": 4,
+        "train_size": 648,
+        "val_size": 12,
+        "rmse": 46963.65024773038,
+        "mae": 43877.708333333336,
+        "mape": 0.02596535387469708,
+        "r2": -0.6449577158321702,
+        "directional_accuracy": null
+      },
+      {
+        "fold": 5,
+        "train_size": 729,
+        "val_size": 12,
+        "rmse": 22460.526144783893,
+        "mae": 21356.28125,
+        "mape": 0.02674251984253359,
+        "r2": 0.23740841546982605,
+        "directional_accuracy": null
+      }
+    ]
+  },
+  "holdout_results": {
+    "overall": {
+      "rmse": 47997.80924725766,
+      "mae": 42386.397569444445,
+      "mape": 0.033145546970529925,
+      "r2": 0.9872651086252389,
+      "directional_accuracy": 1.0,
+      "mean_prediction_error": -41428.88715277778,
+      "prediction_bias": -38587.875,
+      "rmse_pct": 0.03662782052975946,
+      "mae_pct": 0.032345671342600836
+    },
+    "by_city": {
+      "Vancouver": {
+        "rmse": 47997.80924725766,
+        "mae": 42386.397569444445,
+        "mape": 0.033145546970529925,
+        "r2": 0.9872651086252389,
+        "mean_prediction_error": -41428.88715277778,
+        "prediction_bias": -38587.875
+      }
+    },
+    "by_property_type": {
+      "detached": {
+        "rmse": 63844.412514864656,
+        "mae": 54991.79347826087,
+        "mape": 0.028210232114074207,
+        "r2": -2.8812910992935827,
+        "mean_prediction_error": -51994.36956521739,
+        "prediction_bias": -63783.875
+      },
+      "townhouse": {
+        "rmse": 38365.1496424078,
+        "mae": 36469.579081632655,
+        "mape": 0.035462123331723425,
+        "r2": -1.1873086697646058,
+        "mean_prediction_error": -36469.579081632655,
+        "prediction_bias": -35956.875
+      }
+    },
+    "n_test_samples": 72
+  },
+  "overfitting_check": {
+    "cv_rmse": 91194.52928100481,
+    "holdout_rmse": 47997.80924725766,
+    "rmse_degradation_pct": -47.36766599303012,
+    "cv_mape": 0.05649325857654062,
+    "holdout_mape": 0.033145546970529925,
+    "mape_degradation_pct": -41.32830723783976,
+    "cv_r2": -12.466919487506617,
+    "holdout_r2": 0.9872651086252389,
+    "r2_drop": -13.454184596131856,
+    "warnings": [],
+    "overfitting_risk": "low"
+  },
+  "model_params": {
+    "n_estimators": 300,
+    "learning_rate": 0.03,
+    "max_depth": 4,
+    "min_child_weight": 5,
+    "subsample": 0.7,
+    "colsample_bytree": 0.7,
+    "colsample_bylevel": 0.8,
+    "reg_alpha": 0.1,
+    "reg_lambda": 1.0,
+    "gamma": 0.1,
+    "early_stopping_rounds": 50,
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "n_samples": 882,
+  "n_features": 62,
+  "data_quality": {
+    "n_samples": 1368,
+    "issues": [],
+    "warnings": [],
+    "can_proceed": true
+  }
+}
