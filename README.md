@@ -4,7 +4,7 @@ ML-powered property price forecasting with buy-vs-rent analysis for Canadian mar
 
 ## Live Demo
 
-**Try it now:** [https://propra-production.up.railway.app](https://propra-production.up.railway.app)
+**Try it now:** [https://real-estate-production-cd36.up.railway.app](https://real-estate-production-cd36.up.railway.app)
 
 *Note: First load may take 30-60 seconds as Railway spins up from free tier sleep.*
 
