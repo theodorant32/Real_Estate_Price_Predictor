@@ -23,7 +23,9 @@ st.set_page_config(
 
 @st.cache_resource
 def load_model():
-    predictor = PricePredictor()
+    # Use absolute path based on app.py location (works on Railway)
+    model_dir = str(Path(__file__).parent / "models")
+    predictor = PricePredictor(model_dir=model_dir)
     try:
         predictor.load_model()
         return predictor, True
