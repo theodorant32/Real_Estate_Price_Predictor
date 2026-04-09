@@ -18,6 +18,13 @@ lxml>=4.9.0
 streamlit>=1.28.0
 plotly>=5.17.0
 
+# Graph Analysis
+networkx>=3.0.0
+python-louvain>=0.16
+
+# Explainability
+shap>=0.43.0
+
 # Utilities
 python-dateutil>=2.8.0
 pyyaml>=6.0

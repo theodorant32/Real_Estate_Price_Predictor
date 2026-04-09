@@ -34,15 +34,30 @@ Thumbs.db
 # Logs
 *.log
 
-# Environment
+# Environment - CRITICAL: Never commit these
 .env
 .env.local
+.env.*.local
+*.env
+
+# Secrets and credentials
+*.pem
+*.key
+credentials.json
+secrets.json
+api_keys.txt
+.railway
+.railway.json
 
 # Claude Code
 .claude/
-".claude" 
-"__pycache__/" 
-"*.pyc" 
-".env" 
-".claude" 
-# Force rebuild
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Model artifacts (optional - include if you want to commit trained models)
+# models/*.joblib
+# models/*.h5
+# models/*.pt

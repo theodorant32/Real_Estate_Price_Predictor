@@ -1,8 +1,8 @@
-# Propra - AI-Powered Canadian Real Estate
+# Propra - AI-Powered Canadian Real Estate Platform
 
-**Predict Canadian property prices and decide whether to buy or rent — powered by AI.**
+**Canada's most advanced real estate investment platform** - combining machine learning predictions, interactive visualizations, graph-based neighborhood analysis, and AI-driven insights.
 
-Think Zillow, but smarter: ML price predictions, buy vs rent guidance, and market scenario simulation — all in one interactive dashboard.
+Think Zillow + Redfin + Reonomy, but built for Canadian markets with cutting-edge ML.
 
 ---
 
@@ -14,22 +14,19 @@ Think Zillow, but smarter: ML price predictions, buy vs rent guidance, and marke
 
 ---
 
-## ✨ Features
+## ✨ Features Overview
 
-### 1. 🔮 Price Prediction
-Get AI-powered forecasts for 6/12/18 month prices with confidence intervals.
-
-**Example:** *"Your Vancouver condo: $750K → predicted $812K in 12 months"*
-
-### 2. 📊 Buy vs Rent Calculator
-Canadian-specific analysis with BC PTT, CMHC rules, strata fees, and tax implications.
-
-**Example:** *"Buying scores 72/100, Renting scores 54/100 → Buy recommended"*
-
-### 3. 📈 Scenario Simulation
-Test "what-if" scenarios: What happens if mortgage rates rise by 1%? See instant impact on predictions.
-
-**Example:** *"+1% interest rate → your property predicted: $765K (down from $790K)"*
+| Feature | Description |
+|---------|-------------|
+| 🔮 **Price Predictor** | ML-powered forecasts with confidence intervals |
+| 🗺️ **Market Heatmap** | Interactive geographic visualization |
+| 🤖 **AI Chatbot** | Natural language property queries |
+| 💰 **ROI Calculator** | Cap rate, cash-on-cash, DSCR metrics |
+| 📈 **Scenario Simulator** | Monte Carlo wealth projections |
+| 🎯 **Personalized Recs** | Investor persona-based recommendations |
+| 💎 **Hidden Gems** | AI undervalued property detection |
+| 📚 **Case Studies** | Real investment deep-dives |
+| 🧠 **Neighborhood Graph** | Spatial relationship modeling |
 
 ---
 
@@ -61,12 +58,15 @@ streamlit run app.py
 
 ---
 
-## 🎯 Investment Score
+## 🎯 Investment Scoring System
 
 Every property gets a 0-100 score combining:
-- **Growth Potential** (40 pts) - ML-predicted appreciation
-- **Buy/Rent Signal** (30 pts) - Financial analysis recommendation  
-- **Risk Assessment** (30 pts) - Market stability evaluation
+
+| Component | Max Points | Description |
+|-----------|------------|-------------|
+| Growth Potential | 40 | ML-predicted appreciation |
+| Buy/Rent Signal | 30 | Financial analysis recommendation |
+| Risk Assessment | 30 | Market stability evaluation |
 
 **Score Guide:**
 - 🟢 **70-100:** Strong investment opportunity
@@ -82,6 +82,38 @@ Every property gets a 0-100 score combining:
 | CV RMSE | ~$91,000 |
 | CV MAPE | ~5.6% |
 | Holdout R² | ~0.987 |
+
+---
+
+## 🔧 Technical Architecture
+
+### Ensemble Model
+
+```
+Base Models:
+├── XGBoost (gradient boosting)
+├── LightGBM (fast gradient boosting)
+├── Ridge (linear baseline)
+└── Gradient Boosting (sklearn)
+
+Meta-Learner: Ridge Regression
+```
+
+### Feature Engineering
+
+- 62 engineered features
+- Price momentum (3/6/12 month)
+- Rental yield calculations
+- Market regime indicators
+- Neighborhood graph centrality
+- Amenity proximity scores
+
+### Explainability (SHAP)
+
+- Global feature importance
+- Individual prediction explanations
+- Force/waterfall plots
+- Dependence plots
 
 ---
 
@@ -101,21 +133,31 @@ python src/pipeline.py --force-refresh
 ## 📁 Project Structure
 
 ```
+propra/
+├── app.py                      # Main Streamlit application
+├── requirements.txt            # Python dependencies
+├── .gitignore                  # Git ignore rules
 ├── src/
-│   ├── scrapers.py      # Web scrapers (GVR, BoC, CMHC, RateHub)
-│   ├── ingest.py        # Data ingestion pipeline
-│   ├── features.py      # Feature engineering (62 features)
-│   ├── train.py         # Model training with time-series CV
-│   ├── predict.py       # Inference with ML model
-│   ├── pipeline.py      # Automated ML pipeline
-│   ├── buy_vs_rent.py   # Financial calculator
-│   └── recommender.py   # Property recommendations
+│   ├── predict.py              # Price prediction module
+│   ├── features.py             # Feature engineering
+│   ├── train.py                # Model training
+│   ├── ingest.py               # Data ingestion
+│   ├── pipeline.py             # Automated ML pipeline
+│   ├── heatmap.py              # Market heatmap generation
+│   ├── chatbot.py              # AI property advisor
+│   ├── roi_calculator.py       # Investment metrics
+│   ├── scenario_simulator.py   # Monte Carlo simulations
+│   ├── ensemble.py             # Stacked ensemble model
+│   ├── neighborhood_graph.py   # Graph-based modeling
+│   ├── explainability.py       # SHAP explanations
+│   ├── case_studies.py         # Investment case studies
+│   ├── recommender.py          # Property recommendations
+│   └── buy_vs_rent.py          # Buy vs rent calculator
 ├── data/
-│   ├── raw/             # Source data (CSV)
-│   └── processed/       # Merged + featured data
-├── models/              # Saved XGBoost models
-├── .github/workflows/   # CI/CD for automated retraining
-└── app.py               # Streamlit dashboard
+│   ├── raw/                    # Source data
+│   └── processed/              # Merged + featured data
+├── models/                     # Trained model files
+└── .github/workflows/          # CI/CD pipelines
 ```
 
 ---
@@ -124,11 +166,64 @@ python src/pipeline.py --force-refresh
 
 | Source | Data Type | Access |
 |--------|-----------|--------|
-| GVR | MLS benchmark prices (sold comps) | Web scrape / fallback |
+| GVR | MLS benchmark prices | Web scrape / fallback |
 | Bank of Canada | Interest rates | API v2 |
-| CMHC | Rental market survey | Fallback (login required) |
+| CMHC | Rental market survey | Fallback |
 | RateHub | Mortgage rates | Web scrape |
 | BoC News | Sentiment analysis | Web scrape |
+
+---
+
+## 💻 API Usage
+
+### Price Prediction
+
+```python
+from src.predict import PricePredictor
+
+predictor = PricePredictor()
+predictor.load_model()
+
+pred = predictor.predict_price_change(
+    current_price=750000,
+    city="Vancouver",
+    property_type="condo",
+    horizon_months=12
+)
+
+print(f"Predicted: ${pred['predicted_price_6m']:,.0f}")
+print(f"Change: {pred['predicted_change_pct']:+.1f}%")
+```
+
+### ROI Analysis
+
+```python
+from src.roi_calculator import ROICalculator, PropertyInputs
+
+inputs = PropertyInputs(
+    purchase_price=750000,
+    monthly_rent=2600,
+    down_payment_pct=0.20
+)
+
+calc = ROICalculator()
+metrics = calc.calculate_all_metrics(inputs)
+
+print(f"Cap Rate: {metrics['cap_rate']:.2f}%")
+print(f"Cash-on-Cash: {metrics['cash_on_cash_return']:.2f}%")
+```
+
+### Neighborhood Analysis
+
+```python
+from src.neighborhood_graph import create_sample_graph
+
+graph = create_sample_graph()
+scores = graph.compute_property_scores()
+
+for prop_id, prop_scores in scores.items():
+    print(f"{prop_id}: Walkability={prop_scores['walkability_score']}")
+```
 
 ---
 
@@ -140,52 +235,79 @@ python src/pipeline.py --force-refresh
 2. Select "Deploy from GitHub repo"
 3. Choose this repo
 4. Click **Deploy** → Wait for build
-5. Click **Generate Domain** to get your public URL
+5. Click **Generate Domain**
 
-Your app is live at `https://your-app-production.up.railway.app`
+### Docker
 
-### Hugging Face Spaces (Free)
-
-1. Go to https://huggingface.co/spaces
-2. Create new Space → Streamlit
-3. Connect GitHub repo
+```bash
+docker build -t propra .
+docker run -p 8501:8501 propra
+```
 
 ---
 
-## 💻 API Usage
+## 🔒 Security
 
-```python
-from src.predict import PricePredictor
-from src.recommender import PropertyRecommender, BuyerProfile
+**.gitignore** excludes:
+- `.env` files
+- API keys and credentials
+- Model checkpoints
+- Sensitive data
 
-# Price prediction
-predictor = PricePredictor()
-predictor.load_model()
+**Never commit:**
+- `.env` or `.env.local`
+- `credentials.json`
+- `api_keys.txt`
 
-pred = predictor.predict_price_change(
-    current_price=750000,
-    city="Vancouver",
-    property_type="condo",
-    horizon_months=12
-)
+---
 
-# Property recommendations
-recommender = PropertyRecommender()
-profile = BuyerProfile(
-    annual_income=100000,
-    available_down_payment=150000
-)
-recs = recommender.get_top_recommendations(profile, n=5)
-```
+## 📚 Case Studies
+
+Included in the platform:
+
+1. **Downtown Vancouver Condo** - Long-term hold analysis
+2. **Calgary Detached Home** - Growth market play
+3. **Burnaby Townhouse** - Balanced investment
+
+Each includes:
+- Historical performance data
+- Investment thesis
+- Lessons learned
+- ML forecasts
+
+---
+
+## 🧠 Neighborhood Graph Analysis
+
+Graph-based modeling captures:
+- Property-to-amenity distances
+- Walkability scores
+- Transit accessibility
+- Neighborhood similarity
+- Spatial autocorrelation
+
+**Amenity Types Tracked:**
+- Schools (elementary, high school)
+- Transit (SkyTrain, bus, commuter rail)
+- Parks and recreation
+- Shopping and grocery
+- Healthcare facilities
+- Restaurants
 
 ---
 
 ## 📄 License
 
-MIT
+MIT License
 
 ---
 
 ## ⚠️ Disclaimer
 
-For informational purposes only. Not financial advice. Always consult a qualified financial advisor before making real estate decisions.
+For informational purposes only. Not financial advice. Real estate investments carry risks. Always consult with qualified professionals before making investment decisions.
+
+---
+
+## 📧 Contact
+
+For questions or feedback, open an issue on GitHub.
