@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from pathlib import Path
 import sys
 import json
+from datetime import datetime
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -20,6 +21,7 @@ from ensemble import AdvancedEnsemblePredictor
 from neighborhood_graph import create_sample_graph, NeighborhoodGraph
 from explainability import PredictionExplainer, MarketRegimeDetector
 from case_studies import get_all_case_studies, compare_case_studies, create_case_study_presentation
+from listing_scraper import LiveListingsScraper
 
 
 # =============================================================================
@@ -345,13 +347,15 @@ def load_components():
     heatmap_gen = MarketHeatmapGenerator(predictor=predictor)
     chatbot = PropertyChatbot(predictor=predictor)
     roi_calc = ROICalculator()
+    listing_scraper = LiveListingsScraper(cache_hours=24)
 
     return {
         'predictor': predictor,
         'model_loaded': model_loaded,
         'heatmap': heatmap_gen,
         'chatbot': chatbot,
-        'roi': roi_calc
+        'roi': roi_calc,
+        'listings': listing_scraper
     }
 
 
@@ -490,6 +494,7 @@ tabs = st.tabs([
     "🗺️ Explore Markets",
     "🤖 AI Advisor",
     "💰 Calculate ROI",
+    "🏠 Live Listings",
     "🎯 My Recommendations"
 ])
 
@@ -1308,10 +1313,128 @@ with tabs[3]:
 
 
 # =============================================================================
-# TAB 4: MY RECOMMENDATIONS
+# TAB 4: LIVE LISTINGS
 # =============================================================================
 
 with tabs[4]:
+    st.markdown("### 🏠 Live Listings")
+    st.markdown("Current properties for sale from public sources. Updated daily.")
+
+    # Initialize live listings state
+    if "live_listings" not in st.session_state:
+        st.session_state.live_listings = None
+    if "listings_last_fetched" not in st.session_state:
+        st.session_state.listings_last_fetched = None
+
+    # Fetch button
+    col_fetch, col_info = st.columns([1, 4])
+    with col_fetch:
+        if st.button("🔄 Refresh Listings", use_container_width=True):
+            with st.spinner("Fetching live listings from public sources..."):
+                scraper = components['listings']
+                st.session_state.live_listings = scraper.fetch_listings()
+                st.session_state.listings_last_fetched = datetime.now()
+
+    if st.session_state.listings_last_fetched:
+        st.info(f"Last updated: {st.session_state.listings_last_fetched.strftime('%Y-%m-%d %H:%M')}")
+
+    # Show listings
+    if st.session_state.live_listings is not None and len(st.session_state.live_listings) > 0:
+        listings_df = st.session_state.live_listings
+
+        # Filters
+        filter_col1, filter_col2, filter_col3 = st.columns(3)
+        with filter_col1:
+            selected_city = st.selectbox("City", sorted(listings_df['city'].unique()))
+        with filter_col2:
+            selected_type = st.selectbox("Property Type", sorted(listings_df['property_type'].unique()))
+        with filter_col3:
+            max_price = st.number_input("Max Price", min_value=0, value=2000000, step=100000)
+
+        filtered = listings_df[
+            (listings_df['city'] == selected_city) &
+            (listings_df['property_type'] == selected_type) &
+            (listings_df['price'] <= max_price)
+        ]
+
+        if len(filtered) > 0:
+            st.markdown(f"#### {len(filtered)} Properties Found")
+
+            for idx, (_, row) in enumerate(filtered.iterrows()):
+                # Calculate investment metrics
+                estimated_rent = row.get('estimated_monthly_rent', int(row['price'] * 0.04 / 12))
+                gross_yield = (estimated_rent * 12) / row['price'] * 100
+
+                with st.container():
+                    card_col1, card_col2 = st.columns([3, 1])
+
+                    with card_col1:
+                        st.markdown(f"""
+                        <div class="result-card" style="border-left: 5px solid #0078D4;">
+                            <div style="font-size:1.25rem; font-weight:700; color:#0f172a;">
+                                {row.get('address', f"{row['city']} Property")}
+                            </div>
+                            <div style="color:#64748b; font-size:0.9rem; margin-top:0.25rem;">
+                                {row['city']} • {row['property_type'].replace('_', ' ').title()}
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        details_col1, details_col2, details_col3 = st.columns(3)
+                        with details_col1:
+                            st.metric("Price", f"${row['price']:,.0f}")
+                        with details_col2:
+                            beds = row.get('bedrooms', 'N/A')
+                            baths = row.get('bathrooms', 'N/A')
+                            st.metric("Beds / Baths", f"{beds} / {baths}")
+                        with details_col3:
+                            sqft = row.get('sqft', 0)
+                            st.metric("Size", f"{sqft:,} sqft" if sqft else "N/A")
+
+                    with card_col2:
+                        st.markdown(f"""
+                        <div style="text-align:right;">
+                            <div style="font-size:1.5rem; font-weight:800; color:#0078D4;">${row['price']/1000:.0f}K</div>
+                            <div style="font-size:0.85rem; color:#22c55e; font-weight:600;">{gross_yield:.1f}% Gross Yield</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        if st.button("Analyze This Property", key=f"analyze_listing_{idx}", use_container_width=True):
+                            st.session_state.inline_roi_property = {
+                                'price': row['price'],
+                                'rent': estimated_rent,
+                                'city': row['city'],
+                                'property_type': row['property_type'],
+                                'address': row.get('address', '')
+                            }
+                            st.session_state.expanded_property = None
+                            st.session_state.active_tab = "recommendations"
+                            st.rerun()
+
+                    st.markdown("---")
+        else:
+            st.info("No properties match your filters. Try adjusting your criteria.")
+    else:
+        st.markdown("""
+        <div style="text-align:center; padding:3rem;">
+            <div style="font-size:3rem; margin-bottom:1rem;">🏠</div>
+            <div style="font-size:1.25rem; color:#64748b;">Click "Refresh Listings" to fetch current properties from public sources</div>
+            <div style="font-size:0.9rem; color:#94a3b8; margin-top:0.5rem;">Data cached for 24 hours for performance</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Show summary if available
+        scraper = components['listings']
+        summary = scraper.get_listing_summary()
+        if summary['total'] > 0:
+            st.markdown(f"**Cached:** {summary['total']} listings across {len(summary['cities'])} cities")
+
+
+# =============================================================================
+# TAB 5: MY RECOMMENDATIONS
+# =============================================================================
+
+with tabs[5]:
     st.markdown("### 🎯 My Recommendations")
     st.markdown("Get property recommendations tailored to your investment goals and risk profile.")
 
