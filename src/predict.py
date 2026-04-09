@@ -96,42 +96,68 @@ class PricePredictor:
         city: str,
         property_type: str,
         additional_features: Dict = None,
-        horizon_months: int = 6
+        horizon_months: int = 6,
+        market_conditions: Dict = None
     ) -> Dict:
 
-        # Fallback appreciation rates - varied by city and property type
-        # Based on historical data and market trends
-        appreciation_rates = {
-            ("Vancouver", "detached"): 0.025,
-            ("Vancouver", "townhouse"): 0.038,
-            ("Vancouver", "condo"): 0.018,
-            ("Vancouver", "multi_family"): 0.032,
-            ("Burnaby", "detached"): 0.035,
-            ("Burnaby", "townhouse"): 0.048,
-            ("Burnaby", "condo"): 0.028,
-            ("Burnaby", "multi_family"): 0.042,
-            ("Richmond", "detached"): 0.022,
-            ("Richmond", "townhouse"): 0.028,
-            ("Richmond", "condo"): 0.015,
-            ("Richmond", "multi_family"): 0.025,
-            ("North Vancouver", "detached"): 0.038,
-            ("North Vancouver", "townhouse"): 0.042,
-            ("North Vancouver", "condo"): 0.028,
-            ("North Vancouver", "multi_family"): 0.038,
-            ("Toronto", "detached"): 0.028,
-            ("Toronto", "townhouse"): 0.038,
-            ("Toronto", "condo"): 0.015,
-            ("Toronto", "multi_family"): 0.035,
-            ("Calgary", "detached"): 0.045,
-            ("Calgary", "townhouse"): 0.055,
-            ("Calgary", "condo"): 0.035,
-            ("Calgary", "multi_family"): 0.052,
+        # Base appreciation rates - varied by city and property type
+        # Can be positive or negative depending on market conditions
+        base_appreciation_rates = {
+            ("Vancouver", "detached"): 0.02,
+            ("Vancouver", "townhouse"): 0.03,
+            ("Vancouver", "condo"): 0.01,
+            ("Vancouver", "multi_family"): 0.025,
+            ("Burnaby", "detached"): 0.025,
+            ("Burnaby", "townhouse"): 0.04,
+            ("Burnaby", "condo"): 0.02,
+            ("Burnaby", "multi_family"): 0.035,
+            ("Richmond", "detached"): 0.015,
+            ("Richmond", "townhouse"): 0.02,
+            ("Richmond", "condo"): 0.005,
+            ("Richmond", "multi_family"): 0.018,
+            ("North Vancouver", "detached"): 0.03,
+            ("North Vancouver", "townhouse"): 0.035,
+            ("North Vancouver", "condo"): 0.02,
+            ("North Vancouver", "multi_family"): 0.03,
+            ("Toronto", "detached"): 0.02,
+            ("Toronto", "townhouse"): 0.03,
+            ("Toronto", "condo"): 0.005,
+            ("Toronto", "multi_family"): 0.028,
+            ("Calgary", "detached"): 0.04,
+            ("Calgary", "townhouse"): 0.05,
+            ("Calgary", "condo"): 0.025,
+            ("Calgary", "multi_family"): 0.045,
         }
 
         key = (city, property_type)
-        annual_rate = appreciation_rates.get(key, 0.03)
+        base_annual_rate = base_appreciation_rates.get(key, 0.02)
+
+        # Apply market condition adjustments
+        market_adjustment = 0.0
+        if market_conditions:
+            # Interest rate impact (higher rates = lower prices)
+            rate_change = market_conditions.get("interest_rate_change", 0)  # e.g., +0.5 for 50bps increase
+            market_adjustment -= rate_change * 0.5  # 50bps rate hike = -0.25% price impact
+
+            # Inventory impact (high inventory = lower prices)
+            inventory_level = market_conditions.get("inventory_level", "balanced")  # low, balanced, high
+            if inventory_level == "high":
+                market_adjustment -= 0.02  # -2% impact
+            elif inventory_level == "low":
+                market_adjustment += 0.015  # +1.5% impact
+
+            # Economic sentiment (recession fears = lower prices)
+            sentiment = market_conditions.get("economic_sentiment", "neutral")  # negative, neutral, positive
+            if sentiment == "negative":
+                market_adjustment -= 0.015
+            elif sentiment == "positive":
+                market_adjustment += 0.01
+
+        # Final rate = base + market adjustments
+        annual_rate = base_annual_rate + market_adjustment
 
         # Scale rate by horizon (convert annual to horizon-specific)
+        # Use compound growth for longer horizons
         years = horizon_months / 12
         change_pct = annual_rate * years
 
@@ -163,7 +189,7 @@ class PricePredictor:
 
                         current_benchmark = latest["benchmark_price"].values[0]
                         model_rate = (predicted_target - current_benchmark) / current_benchmark
-                        model_rate = max(-0.10, min(0.15, model_rate))
+                        model_rate = max(-0.15, min(0.20, model_rate))  # Allow negative predictions
 
                         # Blend: 60% model, 40% historical, then scale by horizon
                         blended_annual = 0.6 * model_rate + 0.4 * annual_rate
@@ -175,16 +201,31 @@ class PricePredictor:
 
         predicted_price = current_price * (1 + change_pct)
 
-        # Uncertainty scales with horizon (sqrt of time)
-        # Base volatility per 6 months, scales with sqrt(horizon/6)
+        # Uncertainty scales with horizon and market volatility
+        # Higher uncertainty when predictions are negative (more volatile downside)
         base_volatility = {
-            "detached": 0.025,
-            "townhouse": 0.020,
-            "condo": 0.030,
-            "multi_family": 0.022
+            "detached": 0.03,
+            "townhouse": 0.025,
+            "condo": 0.04,
+            "multi_family": 0.03
         }
-        base_vol = base_volatility.get(property_type, 0.025)
-        uncertainty = base_vol * np.sqrt(horizon_months / 6)
+        base_vol = base_volatility.get(property_type, 0.03)
+
+        # Increase uncertainty for negative predictions (downside risk is harder to predict)
+        if change_pct < 0:
+            uncertainty = base_vol * np.sqrt(horizon_months / 6) * 1.5
+        else:
+            uncertainty = base_vol * np.sqrt(horizon_months / 6)
+
+        # Market regime based on prediction
+        if change_pct > 0.04:
+            regime = "hot"
+        elif change_pct > 0.01:
+            regime = "warm"
+        elif change_pct > -0.01:
+            regime = "cooling"
+        else:
+            regime = "cold"
 
         return {
             "current_price": current_price,
@@ -195,7 +236,9 @@ class PricePredictor:
             "city": city,
             "property_type": property_type,
             "horizon_months": horizon_months,
-            "uses_ml_model": use_ml
+            "uses_ml_model": use_ml,
+            "market_regime": regime,
+            "market_adjustment": round(market_adjustment * 100, 2)
         }
 
     def batch_predict(self, properties: List[Dict]) -> List[Dict]:

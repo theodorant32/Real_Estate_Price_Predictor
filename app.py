@@ -111,28 +111,34 @@ st.markdown("""
         color: rgba(255, 255, 255, 0.9);
     }
 
-    /* Navigation tabs - modern pill style */
+    /* Navigation tabs - modern pill style with high contrast */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 6px;
-        padding: 0.5rem;
-        background: #f1f5f9;
+        gap: 8px;
+        padding: 0.75rem;
+        background: #e2e8f0;
         border-radius: 12px;
+        border: 1px solid #cbd5e1;
     }
     .stTabs [data-baseweb="tab"] {
-        padding: 14px 28px;
-        border-radius: 10px;
+        padding: 12px 20px;
+        border-radius: 8px;
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 0.85rem;
         transition: all 0.2s ease;
-        border: none;
+        border: 2px solid transparent;
+        color: #475569;
+        background: #f8fafc;
     }
     .stTabs [data-baseweb="tab"]:hover {
-        background: rgba(0, 120, 212, 0.08);
+        background: #ffffff;
+        border-color: #0078D4;
+        color: #0078D4;
     }
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
         background: linear-gradient(135deg, #0078D4 0%, #00BCF2 100%);
-        color: white;
-        box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(0, 120, 212, 0.4);
+        border-color: #0078D4;
     }
 
     /* Premium cards */
@@ -411,34 +417,47 @@ def get_personalized_recommendations(persona: str, city_data: pd.DataFrame) -> p
 
 
 # =============================================================================
-# SIDEBAR
+# SIDEBAR TOGGLE
 # =============================================================================
 
-st.sidebar.image("https://img.icons8.com/color/96/000000/house.png", width=80)
-st.sidebar.title("Propra")
-st.sidebar.markdown("**AI-Powered Canadian Real Estate Platform**")
-st.sidebar.markdown("---")
+# Initialize sidebar state
+if "sidebar_open" not in st.session_state:
+    st.session_state.sidebar_open = False
 
-components = load_components()
+# Sidebar toggle button in top corner
+col_toggle, col_space = st.columns([1, 10])
+with col_toggle:
+    if st.button("☰" if not st.session_state.sidebar_open else "✕", key="sidebar_toggle", use_container_width=True):
+        st.session_state.sidebar_open = not st.session_state.sidebar_open
+        st.rerun()
 
-if components['model_loaded']:
-    st.sidebar.success("✅ ML Model Active")
-else:
-    st.sidebar.info("ℹ️ Using smart fallback predictions")
+# Show sidebar if open
+if st.session_state.sidebar_open:
+    st.sidebar.image("https://img.icons8.com/color/96/000000/house.png", width=80)
+    st.sidebar.title("Propra")
+    st.sidebar.markdown("**AI-Powered Canadian Real Estate Platform**")
+    st.sidebar.markdown("---")
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("""
-### Features
-- 📊 Market Heatmap
-- 🤖 AI Chatbot
-- 💰 ROI Calculator
-- 📈 Scenario Simulator
-- 🎯 Personalized Recs
-- 🔍 Hidden Gems
-""")
+    components = load_components()
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("<small>Not financial advice. For informational purposes only.</small>", unsafe_allow_html=True)
+    if components['model_loaded']:
+        st.sidebar.success("✅ ML Model Active")
+    else:
+        st.sidebar.info("ℹ️ Using smart fallback predictions")
+
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("""
+    ### Features
+    - 📊 Market Heatmap
+    - 🤖 AI Chatbot
+    - 💰 ROI Calculator
+    - 📈 Scenario Simulator
+    - 🎯 Personalized Recs
+    - 🔍 Hidden Gems
+    """)
+
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("<small>Not financial advice. For informational purposes only.</small>", unsafe_allow_html=True)
 
 
 # =============================================================================
@@ -689,7 +708,8 @@ with tabs[1]:
         }
         st.markdown(f"<div style='padding: 0.75rem 1rem; color: #64748b; font-size: 0.9rem;'>{metric_info[viz_type]}</div>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns([2, 1])
+    # Create two columns - map on left, sidebar on right
+    col_map, col_sidebar = st.columns([3, 1])
 
     # Enhanced map with better styling
     if viz_type == "Investment Score":
@@ -759,32 +779,35 @@ with tabs[1]:
             yanchor="top"
         ),
         geo=dict(
-            scope="north america",
-            center=dict(lat=52, lon=-105),
+            scope="canada",
+            center=dict(lat=56.1304, lon=-106.3468),
             projection_type="mercator",
-            bgcolor="rgba(248, 250, 252, 0.8)",
-            lakecolor="rgba(186, 221, 255, 0.6)",
-            landcolor="rgba(241, 245, 249, 0.8)",
+            bgcolor="rgba(248, 250, 252, 0.95)",
+            lakecolor="rgba(59, 130, 246, 0.5)",
+            landcolor="rgba(241, 245, 249, 0.95)",
             showland=True,
             showlakes=True,
-            countrycolor="#94a3b8",
-            countrywidth=1,
+            countrycolor="#475569",
+            countrywidth=2,
             showcoastlines=True,
-            coastlinecolor="#64748b",
-            coastlinewidth=1.5,
+            coastlinecolor="#475569",
+            coastlinewidth=2,
             showsubunits=True,
-            subunitcolor="#cbd5e1",
-            subunitwidth=1
+            subunitcolor="#94a3b8",
+            subunitwidth=1,
+            lataxis_range=[41, 84],
+            lonaxis_range=[-141, -52]
         ),
-        height=550,
-        margin=dict(l=20, r=20, t=60, b=20),
+        height=600,
+        margin=dict(l=10, r=10, t=60, b=10),
         paper_bgcolor="rgba(255,255,255,0.95)",
         plot_bgcolor="rgba(255,255,255,0.95)"
     )
 
-    st.plotly_chart(fig_map, use_container_width=True)
+    with col_map:
+        st.plotly_chart(fig_map, use_container_width=True)
 
-    with col2:
+    with col_sidebar:
         # Market summary
         st.markdown("#### Market Summary")
 
@@ -795,16 +818,17 @@ with tabs[1]:
             hide_index=True
         )
 
-        # Market Regime Legend
-        with st.expander("📊 What do market regimes mean?", expanded=False):
+        # Market Regime Legend - use container to prevent overflow
+        with st.container():
+            st.markdown("#### Market Regimes")
             st.markdown("""
-            | Regime | Description | What It Means |
-            |--------|-------------|---------------|
-            | 🔴 **HOT** | >5% appreciation, low inventory | High demand, rapid price growth, expect competition |
-            | 🟠 **WARM** | 2-5% appreciation, stable market | Steady growth, balanced buyer/seller conditions |
-            | 🔵 **COOLING** | 0-2% appreciation, rising inventory | Slowing demand, buyer gaining advantage |
-            | ⚫ **COLD** | Negative appreciation, high inventory | Low demand, price declines, distressed opportunities |
-            """)
+            <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; font-size: 0.85rem;">
+                <div style="margin-bottom: 0.5rem;"><span style="color: #dc2626; font-weight: bold;">🔴 HOT</span> - &gt;5% appreciation, high demand</div>
+                <div style="margin-bottom: 0.5rem;"><span style="color: #ea580c; font-weight: bold;">🟠 WARM</span> - 2-5% appreciation, stable</div>
+                <div style="margin-bottom: 0.5rem;"><span style="color: #2563eb; font-weight: bold;">🔵 COOLING</span> - 0-2% appreciation, slowing</div>
+                <div><span style="color: #6b7280; font-weight: bold;">⚫ COLD</span> - Negative appreciation, low demand</div>
+            </div>
+            """, unsafe_allow_html=True)
 
         st.markdown("#### Top Markets")
         top = heatmap_gen.get_top_markets(heatmap_data)
@@ -879,13 +903,14 @@ with tabs[2]:
         if msg["role"] == "user":
             st.markdown(f'<div class="chat-message chat-user">{msg["content"]}</div>', unsafe_allow_html=True)
         else:
+            # Render markdown content properly
+            st.markdown(f'<div class="chat-message chat-bot">', unsafe_allow_html=True)
+            st.markdown(msg["content"])  # Render markdown
             st.markdown(f"""
-            <div class="chat-message chat-bot">
-                {msg["content"]}
-                <div style="margin-top:0.75rem;font-size:0.85rem;color:#666;border-top:1px solid #e2e8f0;padding-top:0.5rem;">
-                    <strong>Confidence:</strong> {msg["confidence"]}
-                    {f' | <strong>Try:</strong> {", ".join(msg["follow_ups"][:3])}' if msg.get("follow_ups") else ''}
-                </div>
+            <div style="margin-top:0.75rem;font-size:0.85rem;color:#64748b;border-top:1px solid #e2e8f0;padding-top:0.5rem;">
+                <strong>Confidence:</strong> {msg["confidence"]}
+                {f' | <strong>Try:</strong> {", ".join(msg["follow_ups"][:3])}' if msg.get("follow_ups") else ''}
+            </div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -1400,52 +1425,63 @@ with tabs[6]:
         st.success(f"Found {len(undervalued)} potentially undervalued properties!")
 
         for i, (_, row) in enumerate(undervalued.iterrows()):
+            # Calculate discount percentage
+            discount_pct = (1 - row['current_price'] / heatmap_data['current_price'].mean()) * 100
+
             st.markdown("---")
 
             col1, col2 = st.columns([2, 1])
 
             with col1:
                 st.markdown(f"""
-                <div class="result-card">
+                <div class="result-card" style="border-left: 5px solid #22c55e;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
                         <div>
-                            <h3 style="margin:0">🔍 {row['city']} - {row['property_type'].replace('_', ' ').title()}</h3>
-                            <small style="color:#666">Undervalue Score: {row['undervalue_score']:.1f}</small>
+                            <div style="font-size:1.5rem; font-weight:800; color:#0f172a; margin:0;">🔍 {row['city']} - {row['property_type'].replace('_', ' ').title()}</div>
+                            <div style="font-size:0.85rem; color:#64748b; margin-top:0.25rem;">Undervalue Score: <strong>{row['undervalue_score']:.1f}</strong></div>
                         </div>
-                        <span class="badge-buy">POTENTIAL GEM</span>
+                        <span class="badge-buy" style="box-shadow:0 4px 12px rgba(34,197,94,0.3);">POTENTIAL GEM</span>
                     </div>
 
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;">
-                        <div>
-                            <small style="color:#666">Current Price</small><br>
-                            <strong style="font-size:1.25rem">${row['current_price']:,.0f}</strong>
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem; background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding:1rem; border-radius:10px; border:1px solid #86efac;">
+                        <div style="text-align:center;">
+                            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Price</div>
+                            <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">${row['current_price']/1000:.0f}K</div>
                         </div>
-                        <div>
-                            <small style="color:#666">vs Market Avg</small><br>
-                            <strong style="font-size:1.25rem;color:#22c55e">{(1 - row['current_price']/heatmap_data['current_price'].mean())*100:.1f}% below</strong>
+                        <div style="text-align:center;">
+                            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Discount</div>
+                            <div style="font-size:1.25rem; font-weight:800; color:#16a34a;">{discount_pct:.0f}% OFF</div>
                         </div>
-                        <div>
-                            <small style="color:#666">Rental Yield</small><br>
-                            <strong style="font-size:1.25rem">{row['rental_yield']:.2f}%</strong>
+                        <div style="text-align:center;">
+                            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Yield</div>
+                            <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">{row['rental_yield']:.1f}%</div>
                         </div>
-                        <div>
-                            <small style="color:#666">Investment Score</small><br>
-                            <strong style="font-size:1.25rem">{row['investment_score']:.0f}/100</strong>
+                        <div style="text-align:center;">
+                            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Score</div>
+                            <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">{row['investment_score']:.0f}/100</div>
                         </div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
 
             with col2:
-                st.markdown("**Why It's Undervalued:**")
+                st.markdown("#### Why It's Undervalued")
                 st.markdown(f"""
-                - Price is {((1 - row['current_price']/heatmap_data['current_price'].mean())*100):.0f}% below market average
-                - Rental yield of {row['rental_yield']:.2f}% exceeds median
-                - Market regime: {row['market_regime'].title()}
-                """)
+                <div style="background:#f8fafc; padding:1rem; border-radius:8px; font-size:0.9rem;">
+                    <div style="margin-bottom:0.5rem;">📉 <strong>Price:</strong> {discount_pct:.0f}% below market average</div>
+                    <div style="margin-bottom:0.5rem;">💰 <strong>Yield:</strong> {row['rental_yield']:.1f}% (above median)</div>
+                    <div style="margin-bottom:0.5rem;">📊 <strong>Regime:</strong> {row['market_regime'].title()} market</div>
+                    <div>📈 <strong>Appreciation:</strong> {row['appreciation_12m']:+.1f}% (12mo)</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-                if st.button("View Details", key=f"gem_{i}", use_container_width=True):
-                    st.info("Use ROI Calculator tab for detailed analysis!")
+                # Quick ROI estimate
+                estimated_monthly_rent = row['current_price'] * row['rental_yield'] / 12
+                st.markdown(f"""
+                <div style="background:#f0f9ff; padding:0.75rem; border-radius:8px; margin-top:0.5rem; border:1px solid #bae6fd;">
+                    <strong>💡 Est. Monthly Rent:</strong> ${estimated_monthly_rent:,.0f}
+                </div>
+                """, unsafe_allow_html=True)
     else:
         st.info("No undervalued properties detected in current market conditions.")
 
