@@ -779,7 +779,7 @@ with tabs[1]:
             yanchor="top"
         ),
         geo=dict(
-            scope="canada",
+            scope="north america",
             center=dict(lat=56.1304, lon=-106.3468),
             projection_type="mercator",
             bgcolor="rgba(248, 250, 252, 0.95)",
@@ -1293,6 +1293,10 @@ with tabs[5]:
     st.markdown("### Personalized Recommendations")
     st.markdown("Get property recommendations tailored to your investment goals and risk profile.")
 
+    # Initialize expanded property state
+    if "expanded_property" not in st.session_state:
+        st.session_state.expanded_property = None
+
     # Investor persona selector
     persona = st.selectbox(
         "Investor Profile",
@@ -1314,7 +1318,10 @@ with tabs[5]:
         st.markdown("#### Top Recommendations for Your Profile")
 
         for i, (_, row) in enumerate(recs.head(5).iterrows()):
-            col1, col2, col3 = st.columns([2, 1, 1])
+            # Check if this property is expanded
+            is_expanded = st.session_state.expanded_property == i
+
+            col1, col2 = st.columns([3, 1])
 
             # Get regime for styling
             regime = row['market_regime']
@@ -1357,15 +1364,74 @@ with tabs[5]:
                 st.metric("Investment Score", f"{row['investment_score']:.0f}/100")
                 st.metric("Buy/Rent Score", f"{row['buy_vs_rent_score']:.0f}/100")
 
-            with col3:
-                if st.button("Analyze", key=f"rec_{i}"):
-                    st.session_state.chat_history.append({
-                        "role": "user",
-                        "content": f"Tell me about {row['city']} {row['property_type']} investment"
-                    })
-                    st.success("Switch to AI Advisor tab for details!")
+                # Analyze button that expands inline
+                btn_label = "▼ Hide Analysis" if is_expanded else "▲ Analyze"
+                if st.button(btn_label, key=f"rec_{i}", use_container_width=True):
+                    if is_expanded:
+                        st.session_state.expanded_property = None
+                    else:
+                        st.session_state.expanded_property = i
+                    st.rerun()
 
-            st.markdown("")
+            # Inline expansion panel with full analysis
+            if is_expanded:
+                st.markdown(f"""
+                <div style="background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                    padding:1.5rem; border-radius:12px; margin:0.5rem 0 1.5rem 0;
+                    border:1px solid #e2e8f0; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                    <h4 style="margin-top:0; color:#0f172a;">📊 Investment Analysis: {row['city']} {row['property_type'].replace('_', ' ').title()}</h4>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Create analysis columns
+                analysis_col1, analysis_col2, analysis_col3 = st.columns(3)
+
+                with analysis_col1:
+                    st.markdown("**📈 Price Forecast**")
+                    st.markdown(f"- Current: ${row['current_price']:,.0f}")
+                    st.markdown(f"- 12mo Predicted: ${row['current_price'] * (1 + row['appreciation_12m']/100):,.0f}")
+                    st.markdown(f"- Appreciation: {row['appreciation_12m']:+.1f}%")
+
+                with analysis_col2:
+                    st.markdown("**💰 Cash Flow**")
+                    monthly_rent = row['current_price'] * row['rental_yield'] / 12
+                    st.markdown(f"- Est. Monthly Rent: ${monthly_rent:,.0f}")
+                    st.markdown(f"- Gross Yield: {row['rental_yield']:.1f}%")
+                    st.markdown(f"- Cap Rate: ~{row['rental_yield'] * 0.7:.1f}%")
+
+                with analysis_col3:
+                    st.markdown("**⚖️ Recommendation**")
+                    if row['investment_score'] >= 70:
+                        st.success("**STRONG BUY**\n\nScore indicates excellent opportunity")
+                    elif row['investment_score'] >= 50:
+                        st.info("**BUY**\n\nGood fundamentals with moderate risk")
+                    else:
+                        st.warning("**HOLD/CAUTION**\n\nConsider alternatives")
+
+                # Quick actions
+                st.markdown("**⚡ Quick Actions:**")
+                action_col1, action_col2, action_col3, action_col4 = st.columns(4)
+                with action_col1:
+                    if st.button("🧮 Calculate ROI", key=f"roi_{i}", use_container_width=True):
+                        st.session_state.roi_price = row['current_price']
+                        st.session_state.roi_rent = monthly_rent
+                        st.info("ROI Calculator values pre-filled! Scroll to Tab 4.")
+                with action_col2:
+                    if st.button("📉 Run Scenario", key=f"scenario_{i}", use_container_width=True):
+                        st.session_state.scenario_city = row['city']
+                        st.info("Scenario Simulator pre-filled! Go to Tab 5.")
+                with action_col3:
+                    if st.button("🤖 Ask AI", key=f"ai_{i}", use_container_width=True):
+                        st.session_state.chat_history.append({
+                            "role": "user",
+                            "content": f"Analyze {row['city']} {row['property_type'].replace('_', ' ')} as investment - price ${row['current_price']:,.0f}, yield {row['rental_yield']:.1f}%"
+                        })
+                        st.success("AI analysis ready in AI Advisor tab!")
+                with action_col4:
+                    if st.button("📍 Compare Cities", key=f"compare_{i}", use_container_width=True):
+                        st.info("Use Market Heatmap to compare locations")
+
+                st.markdown("")
     else:
         st.info("No matching properties found. Try adjusting your criteria.")
 
