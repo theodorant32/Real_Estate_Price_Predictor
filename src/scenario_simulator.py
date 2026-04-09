@@ -156,9 +156,12 @@ class ScenarioSimulator:
         except:
             irr = 0.0
 
-        # CAGR
+        # CAGR (handle negative/zero final wealth)
         final_wealth = net_sale_proceeds + sum(annual_cash_flows)
-        cagr = (final_wealth / initial_cash) ** (1 / inputs.time_horizon_years) - 1
+        if final_wealth > 0 and initial_cash > 0:
+            cagr = (final_wealth / initial_cash) ** (1 / inputs.time_horizon_years) - 1
+        else:
+            cagr = 0.0
 
         return {
             "property_values": property_values.tolist(),

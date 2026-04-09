@@ -1,313 +1,104 @@
-# Propra - AI-Powered Canadian Real Estate Platform
+# Propra
 
-**Canada's most advanced real estate investment platform** - combining machine learning predictions, interactive visualizations, graph-based neighborhood analysis, and AI-driven insights.
+I built this because I'm 23 and honestly terrified I'll never be able to afford a home in Vancouver.
 
-Think Zillow + Redfin + Reonomy, but built for Canadian markets with cutting-edge ML.
-
----
-
-## 🌐 Live Demo
-
-**Try it now:** [https://real-estate-production-cd36.up.railway.app](https://real-estate-production-cd36.up.railway.app)
-
-*Note: First load may take 30-60 seconds as Railway spins up from free tier sleep.*
+Every time I check Zillow or Realtor.ca, another property goes up by $100K. My savings can't keep up with that. So instead of just doom-scrolling listings, I decided to do what any stubborn CS person would do: **build my own AI to make sense of this mess**.
 
 ---
 
-## ✨ Features Overview
+## What This Actually Does
 
-| Feature | Description |
-|---------|-------------|
-| 🔮 **Price Predictor** | ML-powered forecasts with confidence intervals |
-| 🗺️ **Market Heatmap** | Interactive geographic visualization |
-| 🤖 **AI Chatbot** | Natural language property queries |
-| 💰 **ROI Calculator** | Cap rate, cash-on-cash, DSCR metrics |
-| 📈 **Scenario Simulator** | Monte Carlo wealth projections |
-| 🎯 **Personalized Recs** | Investor persona-based recommendations |
-| 💎 **Hidden Gems** | AI undervalued property detection |
-| 📚 **Case Studies** | Real investment deep-dives |
-| 🧠 **Neighborhood Graph** | Spatial relationship modeling |
+This isn't another "predict housing prices" tutorial project. This is a full platform that answers the questions I actually care about:
+
+| Question | Tab |
+|----------|-----|
+| "Will this condo be worth more in a year?" | 🔮 Price Predictor |
+| "Where should I actually look?" | 🗺️ Market Heatmap |
+| "Should I buy or just keep renting?" | 💰 ROI Calculator |
+| "What if rates go up another 2%?" | 📈 Scenario Simulator |
+| "What property fits my situation?" | 🎯 My Recommendations |
+| "Are there any deals left?" | 💎 Hidden Gems |
+| "What actually worked for others?" | 📚 Case Studies |
+
+There's also an AI chatbot if you prefer asking questions naturally, and a neighborhood analysis tool that scores walkability and transit access.
 
 ---
 
-## 🚀 Quick Start
+## Why I Made This
+
+The Canadian housing market feels broken right now. Here's what I'm dealing with:
+
+- **Vancouver detached homes**: ~$2M (lol)
+- **My savings**: Maybe 15% down on a condo if I'm lucky
+- **Mortgage rates**: Went from 2% to 5%+ in two years
+- **Everyone's advice**: "Just wait for the crash" or "Buy now before it's worse"
+
+Nobody actually knows what's happening. So I built something that at least gives me **data-backed uncertainty** instead of **confident guessing**.
+
+---
+
+## The Tech (For Recruiters Who Might Scroll Past)
+
+**ML Stack:**
+- Stacked ensemble (XGBoost + LightGBM + Ridge)
+- SHAP explainability (so I know WHY it says Calgary is better than Vancouver right now)
+- Monte Carlo simulations for uncertainty ranges
+- NetworkX graph modeling for neighborhood amenity scoring
+
+**Data Pipeline:**
+- Weekly automated retraining via GitHub Actions
+- Falls back to historical appreciation rates when data sources fail
+- Market regime detection (hot/warm/cooling/cold)
+
+**Deployment:**
+- Streamlit frontend
+- Railway hosting (free tier, so it sleeps - first load takes ~30s)
+
+---
+
+## Try It
+
+**Live:** [https://real-estate-production-cd36.up.railway.app](https://real-estate-production-cd36.up.railway.app)
+
+Or run locally:
 
 ```bash
-# Install dependencies
 pip install -r requirements.txt
-
-# Train the model (optional, uses fallback if not available)
-python src/train.py
-
-# Run the app
 streamlit run app.py
 ```
 
 ---
 
-## 📍 Coverage
+## What I Learned
 
-| Cities | Property Types |
-|--------|----------------|
-| Vancouver | Detached |
-| Toronto | Townhouse |
-| Calgary | Condo |
-| Burnaby | Multi-family |
-| Richmond | |
-| North Vancouver | |
+1. **Calgary currently beats Vancouver** for ROI (5% predicted appreciation vs 3%). This surprised me.
+2. **Condos in Vancouver have terrible rental yields** (~3.5% cap rate). You're banking entirely on appreciation.
+3. **The 1% rule** (monthly rent = 1% of price) is basically dead in Vancouver. A $750K condo renting for $2,600 is 0.35%.
+4. **Graph-based neighborhood scoring** is overkill but I wanted to learn NetworkX.
 
 ---
 
-## 🎯 Investment Scoring System
+## Not Financial Advice
 
-Every property gets a 0-100 score combining:
+This is a learning project, not advice from a licensed advisor. I'm not responsible if you lose money. The model can be wrong. The data can be stale. The market can stay irrational longer than either of us can stay solvent.
 
-| Component | Max Points | Description |
-|-----------|------------|-------------|
-| Growth Potential | 40 | ML-predicted appreciation |
-| Buy/Rent Signal | 30 | Financial analysis recommendation |
-| Risk Assessment | 30 | Market stability evaluation |
-
-**Score Guide:**
-- 🟢 **70-100:** Strong investment opportunity
-- 🟡 **40-70:** Moderate investment potential
-- 🔴 **0-40:** Consider waiting or explore alternatives
+If you're actually making a 7-figure decision, maybe talk to someone who gets paid to know this stuff.
 
 ---
 
-## 📊 Model Performance
+## What's Next
 
-| Metric | Value |
-|--------|-------|
-| CV RMSE | ~$91,000 |
-| CV MAPE | ~5.6% |
-| Holdout R² | ~0.987 |
-
----
-
-## 🔧 Technical Architecture
-
-### Ensemble Model
-
-```
-Base Models:
-├── XGBoost (gradient boosting)
-├── LightGBM (fast gradient boosting)
-├── Ridge (linear baseline)
-└── Gradient Boosting (sklearn)
-
-Meta-Learner: Ridge Regression
-```
-
-### Feature Engineering
-
-- 62 engineered features
-- Price momentum (3/6/12 month)
-- Rental yield calculations
-- Market regime indicators
-- Neighborhood graph centrality
-- Amenity proximity scores
-
-### Explainability (SHAP)
-
-- Global feature importance
-- Individual prediction explanations
-- Force/waterfall plots
-- Dependence plots
+- [ ] Scrape actual listings instead of just benchmark data
+- [ ] Add image analysis for listing photos (is that kitchen actually modern or just well-lit?)
+- [ ] Connect to MLS API if I can get access
+- [ ] Maybe add Toronto and Montreal data
 
 ---
 
-## 🤖 Automated Pipeline
+## License
 
-Weekly retraining via GitHub Actions:
-- **Sunday 2 AM UTC:** Full model retraining
-- **Daily 3 AM UTC:** Data refresh
-
-```bash
-# Manual pipeline run
-python src/pipeline.py --force-refresh
-```
+MIT. Use it, break it, learn from it.
 
 ---
 
-## 📁 Project Structure
-
-```
-propra/
-├── app.py                      # Main Streamlit application
-├── requirements.txt            # Python dependencies
-├── .gitignore                  # Git ignore rules
-├── src/
-│   ├── predict.py              # Price prediction module
-│   ├── features.py             # Feature engineering
-│   ├── train.py                # Model training
-│   ├── ingest.py               # Data ingestion
-│   ├── pipeline.py             # Automated ML pipeline
-│   ├── heatmap.py              # Market heatmap generation
-│   ├── chatbot.py              # AI property advisor
-│   ├── roi_calculator.py       # Investment metrics
-│   ├── scenario_simulator.py   # Monte Carlo simulations
-│   ├── ensemble.py             # Stacked ensemble model
-│   ├── neighborhood_graph.py   # Graph-based modeling
-│   ├── explainability.py       # SHAP explanations
-│   ├── case_studies.py         # Investment case studies
-│   ├── recommender.py          # Property recommendations
-│   └── buy_vs_rent.py          # Buy vs rent calculator
-├── data/
-│   ├── raw/                    # Source data
-│   └── processed/              # Merged + featured data
-├── models/                     # Trained model files
-└── .github/workflows/          # CI/CD pipelines
-```
-
----
-
-## 📦 Data Sources
-
-| Source | Data Type | Access |
-|--------|-----------|--------|
-| GVR | MLS benchmark prices | Web scrape / fallback |
-| Bank of Canada | Interest rates | API v2 |
-| CMHC | Rental market survey | Fallback |
-| RateHub | Mortgage rates | Web scrape |
-| BoC News | Sentiment analysis | Web scrape |
-
----
-
-## 💻 API Usage
-
-### Price Prediction
-
-```python
-from src.predict import PricePredictor
-
-predictor = PricePredictor()
-predictor.load_model()
-
-pred = predictor.predict_price_change(
-    current_price=750000,
-    city="Vancouver",
-    property_type="condo",
-    horizon_months=12
-)
-
-print(f"Predicted: ${pred['predicted_price_6m']:,.0f}")
-print(f"Change: {pred['predicted_change_pct']:+.1f}%")
-```
-
-### ROI Analysis
-
-```python
-from src.roi_calculator import ROICalculator, PropertyInputs
-
-inputs = PropertyInputs(
-    purchase_price=750000,
-    monthly_rent=2600,
-    down_payment_pct=0.20
-)
-
-calc = ROICalculator()
-metrics = calc.calculate_all_metrics(inputs)
-
-print(f"Cap Rate: {metrics['cap_rate']:.2f}%")
-print(f"Cash-on-Cash: {metrics['cash_on_cash_return']:.2f}%")
-```
-
-### Neighborhood Analysis
-
-```python
-from src.neighborhood_graph import create_sample_graph
-
-graph = create_sample_graph()
-scores = graph.compute_property_scores()
-
-for prop_id, prop_scores in scores.items():
-    print(f"{prop_id}: Walkability={prop_scores['walkability_score']}")
-```
-
----
-
-## 🚀 Deploy Your Own
-
-### Railway (Recommended)
-
-1. Go to https://railway.app/new
-2. Select "Deploy from GitHub repo"
-3. Choose this repo
-4. Click **Deploy** → Wait for build
-5. Click **Generate Domain**
-
-### Docker
-
-```bash
-docker build -t propra .
-docker run -p 8501:8501 propra
-```
-
----
-
-## 🔒 Security
-
-**.gitignore** excludes:
-- `.env` files
-- API keys and credentials
-- Model checkpoints
-- Sensitive data
-
-**Never commit:**
-- `.env` or `.env.local`
-- `credentials.json`
-- `api_keys.txt`
-
----
-
-## 📚 Case Studies
-
-Included in the platform:
-
-1. **Downtown Vancouver Condo** - Long-term hold analysis
-2. **Calgary Detached Home** - Growth market play
-3. **Burnaby Townhouse** - Balanced investment
-
-Each includes:
-- Historical performance data
-- Investment thesis
-- Lessons learned
-- ML forecasts
-
----
-
-## 🧠 Neighborhood Graph Analysis
-
-Graph-based modeling captures:
-- Property-to-amenity distances
-- Walkability scores
-- Transit accessibility
-- Neighborhood similarity
-- Spatial autocorrelation
-
-**Amenity Types Tracked:**
-- Schools (elementary, high school)
-- Transit (SkyTrain, bus, commuter rail)
-- Parks and recreation
-- Shopping and grocery
-- Healthcare facilities
-- Restaurants
-
----
-
-## 📄 License
-
-MIT License
-
----
-
-## ⚠️ Disclaimer
-
-For informational purposes only. Not financial advice. Real estate investments carry risks. Always consult with qualified professionals before making investment decisions.
-
----
-
-## 📧 Contact
-
-For questions or feedback, open an issue on GitHub.
+*Built during a quarter-life crisis by someone who checks Realtor.ca more often than Instagram.*

@@ -691,20 +691,36 @@ with tabs[1]:
                 "cold": "badge-cold"
             }.get(row["market_regime"], "badge-hold")
 
+            # Get appreciation for this property
+            prop_data = heatmap_data[
+                (heatmap_data["city"] == row["city"]) &
+                (heatmap_data["property_type"] == row["property_type"])
+            ]
+            appreciation = prop_data["appreciation_12m"].values[0] if len(prop_data) > 0 else 0
+            rental_yield = prop_data["rental_yield"].values[0] if len(prop_data) > 0 else 0
+
             st.markdown(f"""
-            <div class="result-card" style="padding: 0.75rem; margin-bottom: 0.5rem;">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="result-card" style="padding: 1rem; margin-bottom: 0.75rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
                     <div>
-                        <strong>{row['city']}</strong><br>
-                        <small>{row['property_type'].replace('_', ' ').title()}</small>
+                        <strong style="font-size:1.1rem">{row['city']}</strong>
+                        <span style="margin-left:0.5rem;color:#666">{row['property_type'].replace('_', ' ').title()}</span>
                     </div>
-                    <div>
-                        <span class="{regime_badge}">{row['market_regime'].upper()}</span>
-                    </div>
+                    <span class="{regime_badge}">{row['market_regime'].upper()}</span>
                 </div>
-                <div style="margin-top:0.5rem;display:flex;justify-content:space-between;">
-                    <small>Score: {row['investment_score']:.0f}</small>
-                    <small>${row['current_price']:,.0f}</small>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;">
+                    <div>
+                        <small style="color:#666">Price</small><br>
+                        <strong>${row['current_price']/1000:.0f}K</strong>
+                    </div>
+                    <div>
+                        <small style="color:#666">Appreciation</small><br>
+                        <strong style="color:{'#22c55e' if appreciation>3 else '#f59e0b' if appreciation>0 else '#ef4444'}">{appreciation:+.1f}%</strong>
+                    </div>
+                    <div>
+                        <small style="color:#666">Yield</small><br>
+                        <strong>{rental_yield:.1f}%</strong>
+                    </div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -732,7 +748,10 @@ with tabs[2]:
             st.markdown(f"""
             <div class="chat-message chat-bot">
                 {msg["content"]}
-                {f'<br><small>Confidence: {msg["confidence"]} | Follow-ups: {", ".join(msg["follow_ups"][:3])}</small>' if msg.get("follow_ups") else ''}
+                <div style="margin-top:0.75rem;font-size:0.85rem;color:#666;border-top:1px solid #e2e8f0;padding-top:0.5rem;">
+                    <strong>Confidence:</strong> {msg["confidence"]}
+                    {f' | <strong>Try:</strong> {", ".join(msg["follow_ups"][:3])}' if msg.get("follow_ups") else ''}
+                </div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -1022,10 +1041,12 @@ with tabs[4]:
             )
 
         with r3:
+            cagr_val = mc['cagr_mean'] * 100 if not np.isnan(mc['cagr_mean']) else 0
+            cagr_std = mc['cagr_std'] * 100 if not np.isnan(mc['cagr_std']) else 0
             st.metric(
                 "Expected CAGR",
-                f"{mc['cagr_mean']*100:.1f}%",
-                f"±{mc['cagr_std']*100:.1f}%"
+                f"{cagr_val:.1f}%",
+                f"±{cagr_std:.1f}%"
             )
 
         with r4:
