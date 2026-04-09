@@ -425,44 +425,47 @@ def get_personalized_recommendations(persona: str, city_data: pd.DataFrame) -> p
 # SIDEBAR TOGGLE
 # =============================================================================
 
+# Load components FIRST - needed for entire app
+components = load_components()
+
 # Initialize sidebar state
 if "sidebar_open" not in st.session_state:
     st.session_state.sidebar_open = False
 
-# Sidebar toggle button in top corner
-col_toggle, col_space = st.columns([1, 10])
+# Sidebar toggle button in top-right corner
+col_space, col_toggle = st.columns([12, 1])
 with col_toggle:
-    if st.button("☰" if not st.session_state.sidebar_open else "✕", key="sidebar_toggle", use_container_width=True):
+    toggle_label = "✕" if st.session_state.sidebar_open else "☰"
+    if st.button(toggle_label, key="sidebar_toggle", use_container_width=True, help="Toggle sidebar"):
         st.session_state.sidebar_open = not st.session_state.sidebar_open
         st.rerun()
 
 # Show sidebar if open
 if st.session_state.sidebar_open:
-    st.sidebar.image("https://img.icons8.com/color/96/000000/house.png", width=80)
-    st.sidebar.title("Propra")
-    st.sidebar.markdown("**AI-Powered Canadian Real Estate Platform**")
-    st.sidebar.markdown("---")
+    with st.sidebar:
+        st.image("https://img.icons8.com/color/96/000000/house.png", width=80)
+        st.title("Propra")
+        st.markdown("**AI-Powered Canadian Real Estate Platform**")
+        st.markdown("---")
 
-    components = load_components()
+        if components['model_loaded']:
+            st.sidebar.success("✅ ML Model Active")
+        else:
+            st.sidebar.info("ℹ️ Using smart fallback predictions")
 
-    if components['model_loaded']:
-        st.sidebar.success("✅ ML Model Active")
-    else:
-        st.sidebar.info("ℹ️ Using smart fallback predictions")
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("""
+        ### Features
+        - 📊 Market Heatmap
+        - 🤖 AI Chatbot
+        - 💰 ROI Calculator
+        - 📈 Scenario Simulator
+        - 🎯 Personalized Recs
+        - 🔍 Hidden Gems
+        """)
 
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("""
-    ### Features
-    - 📊 Market Heatmap
-    - 🤖 AI Chatbot
-    - 💰 ROI Calculator
-    - 📈 Scenario Simulator
-    - 🎯 Personalized Recs
-    - 🔍 Hidden Gems
-    """)
-
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("<small>Not financial advice. For informational purposes only.</small>", unsafe_allow_html=True)
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("<small>Not financial advice. For informational purposes only.</small>", unsafe_allow_html=True)
 
 
 # =============================================================================
@@ -1031,60 +1034,48 @@ with tabs[1]:
 
             for i, (_, row) in enumerate(undervalued.iterrows()):
                 discount_pct = (1 - row['current_price'] / heatmap_data['current_price'].mean()) * 100
+                estimated_monthly_rent = row['current_price'] * row['rental_yield'] / 12
 
                 st.markdown("---")
 
+                # Property card using Streamlit columns
                 gem_col1, gem_col2 = st.columns([2, 1])
 
                 with gem_col1:
-                    st.markdown(f"""
-                    <div class="result-card" style="border-left: 5px solid #22c55e;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                            <div>
-                                <div style="font-size:1.5rem; font-weight:800; color:#0f172a; margin:0;">🔍 {row['city']} - {row['property_type'].replace('_', ' ').title()}</div>
-                                <div style="font-size:0.85rem; color:#64748b; margin-top:0.25rem;">Undervalue Score: <strong>{row['undervalue_score']:.1f}</strong></div>
-                            </div>
-                            <span class="badge-buy" style="box-shadow:0 4px 12px rgba(34,197,94,0.3);">POTENTIAL GEM</span>
-                        </div>
+                    # Header
+                    col_header1, col_header2 = st.columns([3, 1])
+                    with col_header1:
+                        st.markdown(f"### 🔍 {row['city']} - {row['property_type'].replace('_', ' ').title()}")
+                        st.caption(f"Undervalue Score: **{row['undervalue_score']:.1f}**")
+                    with col_header2:
+                        st.markdown("")
+                        st.markdown("")
+                        st.success("**POTENTIAL GEM**")
 
-                        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem; background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding:1rem; border-radius:10px; border:1px solid #86efac;">
-                            <div style="text-align:center;">
-                                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Price</div>
-                                <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">${row['current_price']/1000:.0f}K</div>
-                            </div>
-                            <div style="text-align:center;">
-                                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Discount</div>
-                                <div style="font-size:1.25rem; font-weight:800; color:#16a34a;">{discount_pct:.0f}% OFF</div>
-                            </div>
-                            <div style="text-align:center;">
-                                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Yield</div>
-                                <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">{row['rental_yield']:.1f}%</div>
-                            </div>
-                            <div style="text-align:center;">
-                                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Score</div>
-                                <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">{row['investment_score']:.0f}/100</div>
-                            </div>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    # Stats grid
+                    stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
+                    with stat_col1:
+                        st.markdown("**Price**")
+                        st.markdown(f"${row['current_price']/1000:.0f}K")
+                    with stat_col2:
+                        st.markdown("**Discount**")
+                        st.markdown(f":green[**{discount_pct:.0f}% OFF**]")
+                    with stat_col3:
+                        st.markdown("**Yield**")
+                        st.markdown(f"**{row['rental_yield']:.1f}%**")
+                    with stat_col4:
+                        st.markdown("**Score**")
+                        st.markdown(f"**{row['investment_score']:.0f}/100**")
 
                 with gem_col2:
                     st.markdown("#### Why It's Undervalued")
-                    st.markdown(f"""
-                    <div style="background:#f8fafc; padding:1rem; border-radius:8px; font-size:0.9rem;">
-                        <div style="margin-bottom:0.5rem;">📉 <strong>Price:</strong> {discount_pct:.0f}% below market average</div>
-                        <div style="margin-bottom:0.5rem;">💰 <strong>Yield:</strong> {row['rental_yield']:.1f}% (above median)</div>
-                        <div style="margin-bottom:0.5rem;">📊 <strong>Regime:</strong> {row['market_regime'].title()} market</div>
-                        <div>📈 <strong>Appreciation:</strong> {row['appreciation_12m']:+.1f}% (12mo)</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown(f"- 📉 **Price:** {discount_pct:.0f}% below market average")
+                    st.markdown(f"- 💰 **Yield:** {row['rental_yield']:.1f}% (above median)")
+                    st.markdown(f"- 📊 **Regime:** {row['market_regime'].title()} market")
+                    st.markdown(f"- 📈 **Appreciation:** {row['appreciation_12m']:+.1f}% (12mo)")
+                    st.info(f"💡 **Est. Monthly Rent:** ${estimated_monthly_rent:,.0f}")
 
-                    estimated_monthly_rent = row['current_price'] * row['rental_yield'] / 12
-                    st.markdown(f"""
-                    <div style="background:#f0f9ff; padding:0.75rem; border-radius:8px; margin-top:0.5rem; border:1px solid #bae6fd;">
-                        <strong>💡 Est. Monthly Rent:</strong> ${estimated_monthly_rent:,.0f}
-                    </div>
-                    """, unsafe_allow_html=True)
+                st.markdown("")
         else:
             st.info("No undervalued properties detected in current market conditions.")
 
@@ -1100,6 +1091,14 @@ with tabs[2]:
     # Initialize chat history
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
+
+    # Initialize inline analysis states
+    if "inline_roi_property" not in st.session_state:
+        st.session_state.inline_roi_property = None
+    if "inline_ai_query" not in st.session_state:
+        st.session_state.inline_ai_query = None
+    if "inline_compare_city" not in st.session_state:
+        st.session_state.inline_compare_city = None
 
     chatbot = components['chatbot']
 
@@ -1430,19 +1429,101 @@ with tabs[4]:
                 action_col1, action_col2, action_col3 = st.columns(3)
                 with action_col1:
                     if st.button("🧮 Calculate ROI", key=f"roi_{i}", use_container_width=True):
-                        st.session_state.roi_price = row['current_price']
-                        st.session_state.roi_rent = monthly_rent
-                        st.info("ROI Calculator values pre-filled!")
+                        st.session_state.inline_roi_property = {
+                            'price': row['current_price'],
+                            'rent': monthly_rent,
+                            'city': row['city'],
+                            'property_type': row['property_type']
+                        }
+                        st.rerun()
                 with action_col2:
                     if st.button("🤖 Ask AI", key=f"ai_{i}", use_container_width=True):
-                        st.session_state.chat_history.append({
-                            "role": "user",
-                            "content": f"Analyze {row['city']} {row['property_type'].replace('_', ' ')} as investment - price ${row['current_price']:,.0f}, yield {row['rental_yield']:.1f}%"
-                        })
-                        st.success("AI analysis ready in AI Advisor tab!")
+                        st.session_state.inline_ai_query = f"Analyze {row['city']} {row['property_type'].replace('_', ' ')} as investment - price ${row['current_price']:,.0f}, yield {row['rental_yield']:.1f}%, investment score {row['investment_score']:.0f}/100"
+                        st.rerun()
                 with action_col3:
                     if st.button("📍 Compare Cities", key=f"compare_{i}", use_container_width=True):
-                        st.info("Use Market Heatmap to compare locations")
+                        st.session_state.inline_compare_city = row['city']
+                        st.rerun()
+
+                # Inline ROI Calculator (when triggered)
+                if st.session_state.get('inline_roi_property') and st.session_state.inline_roi_property.get('city') == row['city']:
+                    st.markdown("---")
+                    st.markdown("**🧮 Quick ROI Analysis**")
+                    roi_prop = st.session_state.inline_roi_property
+                    roi_inputs = PropertyInputs(
+                        purchase_price=roi_prop['price'],
+                        monthly_rent=roi_prop['rent'],
+                        down_payment_pct=0.20
+                    )
+                    roi_metrics = components['roi'].calculate_all_metrics(roi_inputs)
+                    roi_grade = components['roi'].get_investment_grade(roi_metrics)
+
+                    roi_col1, roi_col2, roi_col3, roi_col4 = st.columns(4)
+                    with roi_col1:
+                        st.metric("Cap Rate", f"{roi_metrics['cap_rate']:.2f}%")
+                    with roi_col2:
+                        st.metric("Cash-on-Cash", f"{roi_metrics['cash_on_cash_return']:.2f}%")
+                    with roi_col3:
+                        st.metric("DSCR", f"{roi_metrics['dscr']:.2f}")
+                    with roi_col4:
+                        st.metric("Grade", roi_grade)
+
+                    if st.button("Close ROI", key="close_inline_roi"):
+                        st.session_state.inline_roi_property = None
+                        st.rerun()
+                    st.markdown("---")
+
+                # Inline AI Analysis (when triggered)
+                if st.session_state.get('inline_ai_query') and row['city'] in st.session_state.inline_ai_query:
+                    st.markdown("---")
+                    st.markdown("**🤖 AI Investment Analysis**")
+
+                    ai_query = st.session_state.inline_ai_query
+                    with st.spinner("AI is analyzing..."):
+                        ai_response = components['chatbot'].get_response(ai_query)
+
+                    st.markdown(ai_response)
+
+                    if st.button("Close AI Analysis", key="close_inline_ai"):
+                        st.session_state.inline_ai_query = None
+                        st.rerun()
+                    st.markdown("---")
+
+                # Inline City Comparison (when triggered)
+                if st.session_state.get('inline_compare_city'):
+                    st.markdown("---")
+                    st.markdown(f"**📍 {st.session_state.inline_compare_city} vs Other Markets**")
+
+                    compare_city = st.session_state.inline_compare_city
+                    city_data = heatmap_data[heatmap_data['city'] == compare_city]
+                    other_cities = heatmap_data[heatmap_data['city'] != compare_city].groupby('city').first().reset_index()
+
+                    if len(city_data) > 0 and len(other_cities) > 0:
+                        comparison_df = pd.concat([
+                            city_data[['city', 'property_type', 'current_price', 'appreciation_12m', 'rental_yield', 'investment_score']],
+                            other_cities[['city', 'property_type', 'current_price', 'appreciation_12m', 'rental_yield', 'investment_score']].head(5)
+                        ], ignore_index=True)
+
+                        st.dataframe(comparison_df.round(2), use_container_width=True)
+
+                        # Visual comparison
+                        viz_col1, viz_col2 = st.columns(2)
+                        with viz_col1:
+                            fig = px.bar(comparison_df, x='city', y='investment_score',
+                                        title='Investment Score Comparison',
+                                        color='investment_score', color_continuous_scale='RdYlGn')
+                            st.plotly_chart(fig, use_container_width=True)
+                        with viz_col2:
+                            fig = px.scatter(comparison_df, x='current_price', y='appreciation_12m',
+                                            size='rental_yield', color='city',
+                                            title='Price vs Appreciation',
+                                            hover_data=['property_type'])
+                            st.plotly_chart(fig, use_container_width=True)
+
+                    if st.button("Close Comparison", key="close_inline_compare"):
+                        st.session_state.inline_compare_city = None
+                        st.rerun()
+                    st.markdown("---")
 
                 st.markdown("")
     else:

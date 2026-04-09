@@ -8,7 +8,7 @@
 
 ## The Problem
 
-I'm 23, trying to figure out if I'll ever be able to afford a home in Vancouver. Every time I check Realtor.ca, another property jumps by $100K. My savings can't keep up.
+I'm in my early 20s, trying to figure out if I'll ever be able to afford a home in Vancouver. Every time I check Realtor.ca, another property jumps by $100K. My savings can't keep up.
 
 Instead of doom-scrolling listings, I built a tool that answers the questions actually keeping me up at night:
 
