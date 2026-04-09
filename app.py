@@ -40,147 +40,209 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+    /* Import Inter font */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
     /* Hide default Streamlit elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* Global styles */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
+    /* Global reset */
     * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
     }
 
-    /* Hero section */
+    /* Smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Hero section - premium gradient */
     .hero-section {
-        background: linear-gradient(135deg, #0078D4 0%, #00BCF2 50%, #0078D4 100%);
-        padding: 4rem 3rem;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0f0f23 100%);
+        padding: 4.5rem 3.5rem;
         border-radius: 1.5rem;
         margin-bottom: 2rem;
         position: relative;
         overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 120, 212, 0.15);
     }
     .hero-section::before {
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
-        background-size: 20px 20px;
+        background:
+            radial-gradient(circle at 20% 50%, rgba(0, 120, 212, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(0, 188, 242, 0.1) 0%, transparent 50%);
+        pointer-events: none;
     }
     .hero-title {
-        font-size: 3rem;
-        font-weight: 800;
-        margin-bottom: 0.5rem;
+        font-size: 3.5rem;
+        font-weight: 900;
+        margin-bottom: 0.75rem;
         position: relative;
         z-index: 1;
-    }
-    .hero-subtitle {
-        font-size: 1.25rem;
-        opacity: 0.95;
-        font-weight: 300;
-        position: relative;
-        z-index: 1;
-    }
-    .hero-tag {
-        display: inline-block;
-        background: rgba(255,255,255,0.2);
-        padding: 0.5rem 1rem;
-        border-radius: 2rem;
-        font-size: 0.875rem;
-        margin-top: 1rem;
-        backdrop-filter: blur(10px);
-    }
-
-    /* Navigation tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-weight: 500;
-    }
-
-    /* Cards */
-    .result-card {
-        background: white;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        border: 1px solid rgba(0,0,0,0.05);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .result-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    }
-
-    /* Metric displays */
-    .metric-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #0078D4, #00BCF2);
+        background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        letter-spacing: -0.02em;
     }
-    .metric-label {
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 300;
+        position: relative;
+        z-index: 1;
+        letter-spacing: 0.02em;
+    }
+    .hero-tag {
+        display: inline-flex;
+        gap: 0.5rem;
+        align-items: center;
+        background: rgba(0, 120, 212, 0.2);
+        padding: 0.5rem 1.25rem;
+        border-radius: 2rem;
         font-size: 0.875rem;
-        color: #666;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        margin-top: 1.25rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 120, 212, 0.3);
+        color: rgba(255, 255, 255, 0.9);
     }
 
-    /* Badges */
-    .badge-buy {
-        background: linear-gradient(135deg, #22c55e, #16a34a);
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 2rem;
+    /* Navigation tabs - modern pill style */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 6px;
+        padding: 0.5rem;
+        background: #f1f5f9;
+        border-radius: 12px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        padding: 14px 28px;
+        border-radius: 10px;
         font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        border: none;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        background: rgba(0, 120, 212, 0.08);
+    }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        background: linear-gradient(135deg, #0078D4 0%, #00BCF2 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+    }
+
+    /* Premium cards */
+    .result-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .result-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        border-color: rgba(0, 120, 212, 0.2);
+    }
+
+    /* Metric displays - bold and clear */
+    .metric-value {
+        font-size: 2.75rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #0078D4 0%, #00BCF2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.02em;
+    }
+    .metric-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Badges - gradient backgrounds with shadows */
+    .badge-buy {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 2rem;
+        font-weight: 700;
+        font-size: 0.875rem;
         display: inline-block;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
     }
     .badge-rent {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         color: white;
-        padding: 0.5rem 1rem;
+        padding: 0.5rem 1.25rem;
         border-radius: 2rem;
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 0.875rem;
         display: inline-block;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
     .badge-hold {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         color: white;
-        padding: 0.5rem 1rem;
+        padding: 0.5rem 1.25rem;
         border-radius: 2rem;
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 0.875rem;
         display: inline-block;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
     }
     .badge-hot {
-        background: linear-gradient(135deg, #ef4444, #f59e0b);
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f97316 100%);
         color: white;
-        padding: 0.25rem 0.75rem;
+        padding: 0.35rem 0.85rem;
         border-radius: 1rem;
-        font-size: 0.75rem;
-        font-weight: 700;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
     }
     .badge-warm {
-        background: linear-gradient(135deg, #f59e0b, #eab308);
+        background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
         color: white;
-        padding: 0.25rem 0.75rem;
+        padding: 0.35rem 0.85rem;
         border-radius: 1rem;
-        font-size: 0.75rem;
-        font-weight: 700;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
     }
     .badge-cooling {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         color: white;
-        padding: 0.25rem 0.75rem;
+        padding: 0.35rem 0.85rem;
         border-radius: 1rem;
-        font-size: 0.75rem;
-        font-weight: 700;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+    .badge-cold {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        color: white;
+        padding: 0.35rem 0.85rem;
+        border-radius: 1rem;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        box-shadow: 0 2px 8px rgba(107, 114, 128, 0.4);
     }
     .badge-cold {
         background: linear-gradient(135deg, #6b7280, #4b5563);
@@ -618,57 +680,120 @@ with tabs[1]:
 
     col1, col2 = st.columns([2, 1])
 
-    with col1:
-        if viz_type == "Investment Score":
-            color_col = "investment_score"
-            colorscale = "Viridis"
-            title = "Investment Score by Property"
-        elif viz_type == "Appreciation (12m)":
-            color_col = "appreciation_12m"
-            colorscale = "RdYlGn"
-            title = "Predicted 12-Month Appreciation (%)"
-        elif viz_type == "Rental Yield":
-            color_col = "rental_yield"
-            colorscale = "YlOrRd"
-            title = "Gross Rental Yield (%)"
-        elif viz_type == "Cap Rate":
-            color_col = "cap_rate"
-            colorscale = "YlOrRd"
-            title = "Cap Rate (%)"
-        else:
-            color_col = "buy_vs_rent_score"
-            colorscale = "RdYlGn"
-            title = "Buy vs Rent Score"
+    # Metric description cards
+    metric_info = {
+        "Investment Score": ("0-100 score combining growth, yield & risk", "🎯", "#0078D4"),
+        "Appreciation (12m)": ("Predicted price growth over 12 months", "📈", "#22c55e"),
+        "Rental Yield": ("Annual rent as % of property price", "💰", "#f59e0b"),
+        "Cap Rate": ("Net operating income / property value", "📊", "#8b5cf6"),
+        "Buy vs Rent Score": ("Higher = better to buy than rent", "⚖️", "#06b6d4")
+    }
 
-        # Scatter map
-        fig_map = px.scatter_geo(
-            heatmap_data,
-            lat="latitude",
-            lon="longitude",
-            color=color_col,
-            color_continuous_scale=colorscale,
-            size="marker_size",
-            hover_name="city",
-            hover_data={
-                "property_type": True,
-                "current_price": ":$",
-                "appreciation_12m": ":.2f%",
-                "rental_yield": ":.2f%",
-                "investment_score": ":.0f"
-            },
-            title=title,
-            height=500
+    info_color = metric_info[viz_type][2]
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, {info_color}15 0%, {info_color}08 100%);
+                padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem;
+                border: 1px solid {info_color}30; display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.5rem;">{metric_info[viz_type][1]}</span>
+        <div>
+            <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 0.25rem;">{viz_type}</div>
+            <div style="font-size: 0.875rem; color: #6b7280;">{metric_info[viz_type][0]}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Enhanced map with better styling
+    if viz_type == "Investment Score":
+        color_col = "investment_score"
+        colorscale = [[0, "#1e3a5f"], [0.5, "#0891b2"], [1, "#22d3ee"]]
+    elif viz_type == "Appreciation (12m)":
+        color_col = "appreciation_12m"
+        colorscale = [[0, "#dc2626"], [0.5, "#fbbf24"], [1, "#16a34a"]]
+    elif viz_type == "Rental Yield":
+        color_col = "rental_yield"
+        colorscale = [[0, "#7c2d12"], [0.5, "#f97316"], [1, "#fde68a"]]
+    elif viz_type == "Cap Rate":
+        color_col = "cap_rate"
+        colorscale = [[0, "#4c1d95"], [0.5, "#8b5cf6"], [1, "#c4b5fd"]]
+    else:
+        color_col = "buy_vs_rent_score"
+        colorscale = [[0, "#164e63"], [0.5, "#06b6d4"], [1, "#67e8f9"]]
+
+    # Create map with custom styling
+    fig_map = go.Figure()
+
+    fig_map.add_trace(go.Scattergeo(
+        lat=heatmap_data["latitude"],
+        lon=heatmap_data["longitude"],
+        marker=dict(
+            size=heatmap_data["marker_size"] * 1.5,
+            color=heatmap_data[color_col],
+            colorscale=colorscale,
+            colorbar=dict(
+                title=dict(text=viz_type, font=dict(size=12, color="#1a1a1a")),
+                tickfont=dict(size=10, color="#1a1a1a"),
+                bgcolor="rgba(255,255,255,0.9)",
+                bordercolor="#e2e8f0",
+                borderwidth=1,
+                len=0.4,
+                thickness=20
+            ),
+            line=dict(color="#1a1a1a", width=1.5),
+            opacity=0.9
+        ),
+        text=heatmap_data.apply(
+            lambda x: f"<b>{x['city']}</b><br>{x['property_type'].replace('_', ' ').title()}<br>" +
+                      f"Price: ${x['current_price']:,.0f}<br>" +
+                      f"{viz_type}: {x[color_col]:.1f}" +
+                      f"<br>Appreciation: {x['appreciation_12m']:+.1f}%<br>" +
+                      f"Yield: {x['rental_yield']:.1f}%",
+            axis=1
+        ),
+        hoverinfo="text",
+        hoverlabel=dict(
+            bgcolor="white",
+            font_size=12,
+            font_family="Inter, sans-serif",
+            font_color="#1a1a1a",
+            bordercolor="#0078D4",
+            align="left"
         )
+    ))
 
-        fig_map.update_layout(
-            geo=dict(
-                scope="north america",
-                center=dict(lat=50, lon=-110),
-                projection_type="mercator"
-            )
-        )
+    fig_map.update_layout(
+        title=dict(
+            text=f"🗺️ {viz_type} Across Canadian Markets",
+            font=dict(size=16, weight=600, color="#1a1a1a"),
+            y=0.95,
+            x=0.5,
+            xanchor="center",
+            yanchor="top"
+        ),
+        geo=dict(
+            scope="north america",
+            center=dict(lat=52, lon=-105),
+            projection_type="mercator",
+            bgcolor="rgba(248, 250, 252, 0.8)",
+            lakecolor="rgba(186, 221, 255, 0.6)",
+            landcolor="rgba(241, 245, 249, 0.8)",
+            showland=True,
+            showlakes=True,
+            countrycolor="#94a3b8",
+            countrywidth=1,
+            showcoastlines=True,
+            coastlinecolor="#64748b",
+            coastlinewidth=1.5,
+            showsubunits=True,
+            subunitcolor="#cbd5e1",
+            subunitwidth=1
+        ),
+        height=550,
+        margin=dict(l=20, r=20, t=60, b=20),
+        paper_bgcolor="rgba(255,255,255,0.95)",
+        plot_bgcolor="rgba(255,255,255,0.95)"
+    )
 
-        st.plotly_chart(fig_map, use_container_width=True)
+    st.plotly_chart(fig_map, use_container_width=True)
 
     with col2:
         # Market summary
@@ -680,6 +805,17 @@ with tabs[1]:
             use_container_width=True,
             hide_index=True
         )
+
+        # Market Regime Legend
+        with st.expander("📊 What do market regimes mean?", expanded=False):
+            st.markdown("""
+            | Regime | Description | What It Means |
+            |--------|-------------|---------------|
+            | 🔴 **HOT** | >5% appreciation, low inventory | High demand, rapid price growth, expect competition |
+            | 🟠 **WARM** | 2-5% appreciation, stable market | Steady growth, balanced buyer/seller conditions |
+            | 🔵 **COOLING** | 0-2% appreciation, rising inventory | Slowing demand, buyer gaining advantage |
+            | ⚫ **COLD** | Negative appreciation, high inventory | Low demand, price declines, distressed opportunities |
+            """)
 
         st.markdown("#### Top Markets")
         top = heatmap_gen.get_top_markets(heatmap_data)
@@ -699,27 +835,36 @@ with tabs[1]:
             appreciation = prop_data["appreciation_12m"].values[0] if len(prop_data) > 0 else 0
             rental_yield = prop_data["rental_yield"].values[0] if len(prop_data) > 0 else 0
 
+            # City color based on regime for visual clarity
+            city_colors = {
+                "hot": "#dc2626",
+                "warm": "#ea580c",
+                "cooling": "#2563eb",
+                "cold": "#374151"
+            }
+            city_color = city_colors.get(row["market_regime"], "#1a1a1a")
+
             st.markdown(f"""
-            <div class="result-card" style="padding: 1rem; margin-bottom: 0.75rem;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
-                    <div>
-                        <strong style="font-size:1.1rem">{row['city']}</strong>
-                        <span style="margin-left:0.5rem;color:#666">{row['property_type'].replace('_', ' ').title()}</span>
+            <div class="result-card" style="padding: 1rem; margin-bottom: 0.75rem; border-left: 5px solid {city_color}; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                        <span style="font-size:1.25rem; font-weight: 700; color: #1a1a1a; text-shadow: 0 1px 2px rgba(255,255,255,1);">{row['city']}</span>
+                        <span style="font-size:0.9rem; color: #6b7280; font-weight: 500; background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px;">{row['property_type'].replace('_', ' ').title()}</span>
                     </div>
-                    <span class="{regime_badge}">{row['market_regime'].upper()}</span>
+                    <span class="{regime_badge}" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">{row['market_regime'].upper()}</span>
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;">
-                    <div>
-                        <small style="color:#666">Price</small><br>
-                        <strong>${row['current_price']/1000:.0f}K</strong>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px;">
+                    <div style="text-align:center;">
+                        <div style="font-size:0.75rem; color: #64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.25rem;">Price</div>
+                        <div style="font-size:1.1rem; font-weight: 700; color: #0f172a;">${row['current_price']/1000:.0f}K</div>
                     </div>
-                    <div>
-                        <small style="color:#666">Appreciation</small><br>
-                        <strong style="color:{'#22c55e' if appreciation>3 else '#f59e0b' if appreciation>0 else '#ef4444'}">{appreciation:+.1f}%</strong>
+                    <div style="text-align:center; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0;">
+                        <div style="font-size:0.75rem; color: #64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.25rem;">Appreciation</div>
+                        <div style="font-size:1.1rem; font-weight: 700; color: {'#16a34a' if appreciation>3 else '#d97706' if appreciation>0 else '#dc2626'}">{appreciation:+.1f}%</div>
                     </div>
-                    <div>
-                        <small style="color:#666">Yield</small><br>
-                        <strong>{rental_yield:.1f}%</strong>
+                    <div style="text-align:center;">
+                        <div style="font-size:0.75rem; color: #64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.25rem;">Yield</div>
+                        <div style="font-size:1.1rem; font-weight: 700; color: #0f172a;">{rental_yield:.1f}%</div>
                     </div>
                 </div>
             </div>
