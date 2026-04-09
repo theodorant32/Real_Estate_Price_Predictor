@@ -88,6 +88,11 @@ st.markdown("""
         -webkit-text-fill-color: transparent;
         background-clip: text;
         letter-spacing: -0.02em;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .hero-title span:first-child {
+        -webkit-text-fill-color: initial;
+        text-shadow: none;
     }
     .hero-subtitle {
         font-size: 1.25rem;
@@ -466,7 +471,7 @@ if st.session_state.sidebar_open:
 
 st.markdown("""
 <div class="hero-section">
-    <div class="hero-title">🏠 Propra</div>
+    <div class="hero-title"><span style="-webkit-text-fill-color: initial;">🏠</span> <span style="background: linear-gradient(135deg, #ffffff 0%, #a5f3fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Propra</span></div>
     <div class="hero-subtitle">Canada's AI-Powered Real Estate Intelligence Platform</div>
     <div class="hero-tag">✨ Predictive Analytics &bull; Investment Insights &bull; Market Intelligence</div>
 </div>
@@ -474,242 +479,372 @@ st.markdown("""
 
 
 # =============================================================================
-# MAIN NAVIGATION
+# MAIN NAVIGATION - CONSOLIDATED
 # =============================================================================
 
 tabs = st.tabs([
-    "🔮 Price Predictor",
-    "🗺️ Market Heatmap",
+    "🔮 Predict & Simulate",
+    "🗺️ Explore Markets",
     "🤖 AI Advisor",
-    "💰 ROI Calculator",
-    "📈 Scenario Simulator",
-    "🎯 My Recommendations",
-    "💎 Hidden Gems",
-    "📚 Case Studies",
-    "🧠 Neighborhood Analysis"
+    "💰 Calculate ROI",
+    "🎯 My Recommendations"
 ])
 
 
 # =============================================================================
-# TAB 1: PRICE PREDICTOR
+# TAB 1: PREDICT & SIMULATE (Consolidated)
 # =============================================================================
 
 with tabs[0]:
-    st.markdown("### AI Price Prediction")
-    st.markdown("Get ML-powered price forecasts with confidence intervals and market analysis.")
+    st.markdown("### 🔮 Predict & Simulate")
+    st.markdown("AI price predictions with scenario modeling and Monte Carlo simulation.")
 
-    col1, col2 = st.columns([2, 1])
+    # Sub-tabs for Predict vs Simulate
+    pred_sim_tabs = st.tabs(["📈 Price Prediction", "🎲 Scenario Simulator"])
 
-    with col1:
-        pred_col1, pred_col2 = st.columns(2)
+    # ===== PRICE PREDICTION SUB-TAB =====
+    with pred_sim_tabs[0]:
+        st.markdown("Get ML-powered price forecasts with confidence intervals.")
 
-        with pred_col1:
-            pred_city = st.selectbox(
-                "City",
-                ["Vancouver", "Toronto", "Calgary", "Burnaby", "Richmond", "North Vancouver"],
-                index=0,
-                key="pred_city"
+        col1, col2 = st.columns([2, 1])
+
+        with col1:
+            pred_col1, pred_col2 = st.columns(2)
+
+            with pred_col1:
+                pred_city = st.selectbox(
+                    "City",
+                    ["Vancouver", "Toronto", "Calgary", "Burnaby", "Richmond", "North Vancouver"],
+                    index=0,
+                    key="pred_city"
+                )
+
+                pred_type = st.selectbox(
+                    "Property Type",
+                    ["condo", "townhouse", "detached", "multi_family"],
+                    format_func=lambda x: x.replace("_", " ").title(),
+                    key="pred_type"
+                )
+
+            with pred_col2:
+                pred_price = st.number_input(
+                    "Current Price ($)",
+                    min_value=200000,
+                    max_value=10000000,
+                    value=750000,
+                    step=25000,
+                    key="pred_price"
+                )
+
+                pred_rent = st.number_input(
+                    "Monthly Rent ($)",
+                    min_value=500,
+                    max_value=20000,
+                    value=2600,
+                    step=100,
+                    key="pred_rent"
+                )
+
+        with col2:
+            st.markdown("#### Scenario Adjustment")
+            rate_adj = st.slider(
+                "Rate Change (%)",
+                min_value=-2.0,
+                max_value=3.0,
+                value=0.0,
+                step=0.25,
+                key="rate_adj"
             )
 
-            pred_type = st.selectbox(
-                "Property Type",
-                ["condo", "townhouse", "detached", "multi_family"],
-                format_func=lambda x: x.replace("_", " ").title(),
-                key="pred_type"
+            horizon = st.slider(
+                "Prediction Horizon (months)",
+                min_value=6,
+                max_value=24,
+                value=12,
+                step=6,
+                key="horizon"
             )
 
-        with pred_col2:
-            pred_price = st.number_input(
-                "Current Price ($)",
+        if st.button("🔮 Get Prediction", type="primary", use_container_width=True, key="get_pred"):
+            predictor = components['predictor']
+
+            prediction = predictor.predict_price_change(
+                current_price=pred_price,
+                city=pred_city,
+                property_type=pred_type,
+                horizon_months=horizon
+            )
+
+            # Rate adjustment
+            if rate_adj != 0:
+                rate_impact = -0.5 * rate_adj
+                adj_appreciation = prediction["predicted_change_pct"] + rate_impact
+                adj_price = pred_price * (1 + adj_appreciation / 100)
+            else:
+                adj_price = prediction["predicted_price_6m"]
+                adj_appreciation = prediction["predicted_change_pct"]
+
+            # Buy vs Rent
+            bvr = quick_analysis(
+                purchase_price=pred_price,
+                monthly_rent=pred_rent,
+                city=pred_city,
+                property_type=pred_type,
+                time_horizon_years=5
+            )
+
+            rec = bvr["recommendation"]["recommendation"]
+            badge = "badge-buy" if "BUY" in rec else "badge-rent" if "RENT" in rec else "badge-hold"
+            bvr_rec = "Buy" if "BUY" in rec else "Rent" if "RENT" in rec else "Hold"
+
+            # Risk level
+            risk = "Low" if pred_city in ["Vancouver", "North Vancouver", "Burnaby"] else "Medium"
+            if pred_type == "condo":
+                risk = "Medium" if risk == "Low" else "High"
+
+            # Investment score
+            score = min(100, max(0, 50 + adj_appreciation * 5 + (20 if "BUY" in rec else -10)))
+
+            st.markdown("---")
+
+            # Results
+            r1, r2, r3, r4 = st.columns(4)
+
+            with r1:
+                st.markdown('<div class="metric-label">Predicted Price</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="metric-value">${adj_price:,.0f}</div>', unsafe_allow_html=True)
+                st.metric("Expected Change", f"{adj_appreciation:+.1f}%")
+
+            with r2:
+                st.markdown('<div class="metric-label">Recommendation</div>', unsafe_allow_html=True)
+                st.markdown(f'<span class="{badge}" style="font-size:1.25rem">{bvr_rec}</span>', unsafe_allow_html=True)
+                st.markdown(f"Over 5-year horizon")
+
+            with r3:
+                st.markdown('<div class="metric-label">Risk Level</div>', unsafe_allow_html=True)
+                risk_emoji = {"Low": "🟢", "Medium": "🟡", "High": "🔴"}.get(risk, "⚪")
+                st.markdown(f'<span style="font-size:1.5rem">{risk_emoji} {risk}</span>', unsafe_allow_html=True)
+
+            with r4:
+                st.markdown('<div class="metric-label">Investment Score</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="metric-value">{score:.0f}/100</div>', unsafe_allow_html=True)
+                if score >= 70:
+                    st.success("Strong opportunity")
+                elif score >= 50:
+                    st.info("Moderate potential")
+                else:
+                    st.warning("Consider alternatives")
+
+            # Price chart
+            st.markdown("#### Price Forecast")
+
+            months = [0, 6, 12, 18, 24]
+            prices = [pred_price]
+            for m in months[1:]:
+                p = predictor.predict_price_change(
+                    current_price=pred_price,
+                    city=pred_city,
+                    property_type=pred_type,
+                    horizon_months=m
+                )
+                prices.append(p["predicted_price_6m"] if m == 6 else p["predicted_price_6m"] * (1 + p["predicted_change_pct"] / 100 * ((m - 6) / 6)))
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=["Now"] + [f"{m} mo" for m in months[1:]],
+                y=prices,
+                mode="lines+markers",
+                name="Predicted Price",
+                line=dict(color="#0078D4", width=3),
+                marker=dict(size=10)
+            ))
+
+            fig.add_trace(go.Scatter(
+                x=["Now"] + [f"{m} mo" for m in months[1:]] + [f"{m} mo" for m in reversed(months[1:])] + ["Now"],
+                y=prices + [p * 1.1 for p in reversed(prices)] + [pred_price * 1.1],
+                fill="toself",
+                fillcolor="rgba(0,120,212,0.15)",
+                line=dict(color="rgba(0,0,0,0)"),
+                name="Confidence Range"
+            ))
+
+            fig.update_layout(
+                height=350,
+                xaxis_title="Time",
+                yaxis_title="Price ($)",
+                showlegend=True,
+                yaxis_tickformat="$,.0f"
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+    # ===== SCENARIO SIMULATOR SUB-TAB =====
+    with pred_sim_tabs[1]:
+        st.markdown("Multi-year wealth projection with Monte Carlo simulation.")
+
+        sim_col1, sim_col2 = st.columns(2)
+
+        with sim_col1:
+            sim_price = st.number_input(
+                "Purchase Price ($)",
                 min_value=200000,
                 max_value=10000000,
                 value=750000,
                 step=25000,
-                key="pred_price"
+                key="sim_price"
             )
 
-            pred_rent = st.number_input(
+            sim_down = st.slider(
+                "Down Payment (%)",
+                min_value=5,
+                max_value=50,
+                value=20,
+                key="sim_down"
+            )
+
+            sim_rent = st.number_input(
                 "Monthly Rent ($)",
-                min_value=500,
-                max_value=20000,
+                min_value=0,
+                max_value=50000,
                 value=2600,
                 step=100,
-                key="pred_rent"
+                help="Set to 0 for owner-occupied",
+                key="sim_rent"
             )
 
-    with col2:
-        st.markdown("#### Scenario Adjustment")
-        rate_adj = st.slider(
-            "Rate Change (%)",
-            min_value=-2.0,
-            max_value=3.0,
-            value=0.0,
-            step=0.25,
-            key="rate_adj"
-        )
-
-        horizon = st.slider(
-            "Prediction Horizon (months)",
-            min_value=6,
-            max_value=24,
-            value=12,
-            step=6,
-            key="horizon"
-        )
-
-    if st.button("🔮 Get Prediction", type="primary", use_container_width=True):
-        predictor = components['predictor']
-
-        prediction = predictor.predict_price_change(
-            current_price=pred_price,
-            city=pred_city,
-            property_type=pred_type,
-            horizon_months=horizon
-        )
-
-        # Rate adjustment
-        if rate_adj != 0:
-            rate_impact = -0.5 * rate_adj
-            adj_appreciation = prediction["predicted_change_pct"] + rate_impact
-            adj_price = pred_price * (1 + adj_appreciation / 100)
-        else:
-            adj_price = prediction["predicted_price_6m"]
-            adj_appreciation = prediction["predicted_change_pct"]
-
-        # Buy vs Rent
-        bvr = quick_analysis(
-            purchase_price=pred_price,
-            monthly_rent=pred_rent,
-            city=pred_city,
-            property_type=pred_type,
-            time_horizon_years=5
-        )
-
-        rec = bvr["recommendation"]["recommendation"]
-        if "BUY" in rec:
-            badge = "badge-buy"
-            bvr_rec = "Buy"
-        elif "RENT" in rec:
-            badge = "badge-rent"
-            bvr_rec = "Rent"
-        else:
-            badge = "badge-hold"
-            bvr_rec = "Hold"
-
-        # Risk level
-        risk = "Low" if pred_city in ["Vancouver", "North Vancouver", "Burnaby"] else "Medium"
-        if pred_type == "condo":
-            risk = "Medium" if risk == "Low" else "High"
-
-        # Investment score
-        score = min(100, max(0, 50 + adj_appreciation * 5 + (20 if "BUY" in rec else -10)))
-
-        st.markdown("---")
-
-        # Results
-        r1, r2, r3, r4 = st.columns(4)
-
-        with r1:
-            st.markdown('<div class="metric-label">Predicted Price</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-value">${adj_price:,.0f}</div>', unsafe_allow_html=True)
-            st.metric("Expected Change", f"{adj_appreciation:+.1f}%")
-
-        with r2:
-            st.markdown('<div class="metric-label">Recommendation</div>', unsafe_allow_html=True)
-            st.markdown(f'<span class="{badge}" style="font-size:1.25rem">{bvr_rec}</span>', unsafe_allow_html=True)
-            st.markdown(f"Over 5-year horizon")
-
-        with r3:
-            st.markdown('<div class="metric-label">Risk Level</div>', unsafe_allow_html=True)
-            risk_emoji = {"Low": "🟢", "Medium": "🟡", "High": "🔴"}.get(risk, "⚪")
-            st.markdown(f'<span style="font-size:1.5rem">{risk_emoji} {risk}</span>', unsafe_allow_html=True)
-            st.markdown(f"Based on market volatility")
-
-        with r4:
-            st.markdown('<div class="metric-label">Investment Score</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-value">{score:.0f}/100</div>', unsafe_allow_html=True)
-            if score >= 70:
-                st.success("Strong opportunity")
-            elif score >= 50:
-                st.info("Moderate potential")
-            else:
-                st.warning("Consider alternatives")
-
-        # Price chart
-        st.markdown("#### Price Forecast")
-
-        months = [0, 6, 12, 18, 24]
-        prices = [pred_price]
-        for m in months[1:]:
-            p = predictor.predict_price_change(
-                current_price=pred_price,
-                city=pred_city,
-                property_type=pred_type,
-                horizon_months=m
+        with sim_col2:
+            sim_city = st.selectbox(
+                "City",
+                ["Vancouver", "Toronto", "Calgary", "Burnaby", "Richmond", "North Vancouver"],
+                index=0,
+                key="sim_city"
             )
-            prices.append(p["predicted_price_6m"] if m == 6 else p["predicted_price_6m"] * (1 + p["predicted_change_pct"] / 100 * ((m - 6) / 6)))
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=["Now"] + [f"{m} mo" for m in months[1:]],
-            y=prices,
-            mode="lines+markers",
-            name="Predicted Price",
-            line=dict(color="#0078D4", width=3),
-            marker=dict(size=10)
-        ))
+            sim_horizon = st.slider(
+                "Time Horizon (years)",
+                min_value=5,
+                max_value=30,
+                value=10,
+                step=5,
+                key="sim_horizon"
+            )
 
-        # Confidence interval
-        fig.add_trace(go.Scatter(
-            x=["Now"] + [f"{m} mo" for m in months[1:]] + [f"{m} mo" for m in reversed(months[1:])] + ["Now"],
-            y=prices + [p * 1.1 for p in reversed(prices)] + [pred_price * 1.1],
-            fill="toself",
-            fillcolor="rgba(0,120,212,0.15)",
-            line=dict(color="rgba(0,0,0,0)"),
-            name="Confidence Range"
-        ))
+            sim_rate = st.number_input(
+                "Mortgage Rate (%)",
+                min_value=1.0,
+                max_value=15.0,
+                value=5.0,
+                step=0.25,
+                key="sim_rate"
+            )
 
-        fig.update_layout(
-            height=350,
-            xaxis_title="Time",
-            yaxis_title="Price ($)",
-            showlegend=True,
-            yaxis_tickformat="$,.0f"
-        )
+        if st.button("📈 Run Simulation", type="primary", use_container_width=True, key="run_sim"):
+            results = quick_scenario_analysis(
+                purchase_price=sim_price,
+                down_payment_pct=sim_down / 100,
+                monthly_rent=sim_rent,
+                city=sim_city,
+                time_horizon_years=sim_horizon
+            )
 
-        st.plotly_chart(fig, use_container_width=True)
+            base = results["base_case"]
+            mc = results["monte_carlo"]
+            risk = results["risk_metrics"]
+
+            st.markdown("---")
+
+            # Key outcomes
+            r1, r2, r3, r4 = st.columns(4)
+
+            with r1:
+                st.metric(
+                    "Final Property Value",
+                    f"${base['final_property_value']:,.0f}",
+                    f"{((base['final_property_value']/sim_price)**(1/sim_horizon)-1)*100:.1f}% CAGR"
+                )
+
+            with r2:
+                st.metric(
+                    "Net Sale Proceeds",
+                    f"${base['net_sale_proceeds']:,.0f}"
+                )
+
+            with r3:
+                st.metric(
+                    "Total Equity Built",
+                    f"${base['total_equity']:,.0f}"
+                )
+
+            with r4:
+                st.metric(
+                    "Cash-on-Cash Return",
+                    f"{risk['cash_on_cash_return']:.1f}%"
+                )
+
+            # Monte Carlo visualization
+            st.markdown("#### Monte Carlo Simulation (1000 trials)")
+
+            fig_mc = go.Figure()
+            fig_mc.add_trace(go.Histogram(
+                x=mc["net_proceeds_samples"],
+                nbinsx=50,
+                name="Net Proceeds",
+                marker_color="#0078D4",
+                opacity=0.7
+            ))
+
+            fig_mc.update_layout(
+                height=400,
+                xaxis_title="Net Sale Proceeds ($)",
+                yaxis_title="Frequency",
+                showlegend=False
+            )
+
+            st.plotly_chart(fig_mc, use_container_width=True)
+
+            # Scenario comparison
+            st.markdown("#### Scenario Comparison")
+            st.dataframe(
+                results["scenario_comparison"].round(2),
+                use_container_width=True
+            )
 
 
 # =============================================================================
-# TAB 2: MARKET HEATMAP
+# TAB 2: EXPLORE MARKETS (Consolidated)
 # =============================================================================
 
 with tabs[1]:
-    # Compact header with selector inline
-    st.markdown("### Market Heatmap")
+    st.markdown("### 🗺️ Explore Markets")
+    st.markdown("Discover opportunities with interactive maps and AI-powered undervalued property detection.")
+
+    # Sub-tabs for Heatmap vs Hidden Gems
+    explore_tabs = st.tabs(["📊 Market Heatmap", "💎 Hidden Gems"])
 
     heatmap_data = generate_sample_heatmap_data()
     heatmap_gen = components['heatmap']
 
-    # Compact inline selector with description
-    col_sel1, col_sel2 = st.columns([1, 3])
-    with col_sel1:
-        viz_type = st.selectbox(
-            "Metric",
-            ["Investment Score", "Appreciation (12m)", "Rental Yield", "Cap Rate", "Buy vs Rent Score"]
-        )
-    with col_sel2:
-        metric_info = {
-            "Investment Score": "0-100 score combining growth, yield & risk",
-            "Appreciation (12m)": "Predicted price growth over 12 months",
-            "Rental Yield": "Annual rent as % of property price",
-            "Cap Rate": "Net operating income / property value",
-            "Buy vs Rent Score": "Higher = better to buy than rent"
-        }
-        st.markdown(f"<div style='padding: 0.75rem 1rem; color: #64748b; font-size: 0.9rem;'>{metric_info[viz_type]}</div>", unsafe_allow_html=True)
+    # ===== MARKET HEATMAP SUB-TAB =====
+    with explore_tabs[0]:
+        # Compact inline selector with description
+        col_sel1, col_sel2 = st.columns([1, 3])
+        with col_sel1:
+            viz_type = st.selectbox(
+                "Metric",
+                ["Investment Score", "Appreciation (12m)", "Rental Yield", "Cap Rate", "Buy vs Rent Score"]
+            )
+        with col_sel2:
+            metric_info = {
+                "Investment Score": "0-100 score combining growth, yield & risk",
+                "Appreciation (12m)": "Predicted price growth over 12 months",
+                "Rental Yield": "Annual rent as % of property price",
+                "Cap Rate": "Net operating income / property value",
+                "Buy vs Rent Score": "Higher = better to buy than rent"
+            }
+            st.markdown(f"<div style='padding: 0.75rem 1rem; color: #64748b; font-size: 0.9rem;'>{metric_info[viz_type]}</div>", unsafe_allow_html=True)
 
-    # Create two columns - map on left, sidebar on right
-    col_map, col_sidebar = st.columns([3, 1])
+        # Create two columns - map on left, sidebar on right
+        col_map, col_sidebar = st.columns([3, 1])
 
     # Enhanced map with better styling
     if viz_type == "Investment Score":
@@ -883,9 +1018,79 @@ with tabs[1]:
             </div>
             """, unsafe_allow_html=True)
 
+    # ===== HIDDEN GEMS SUB-TAB =====
+    with explore_tabs[1]:
+        st.markdown("### 💎 Hidden Gems Engine")
+        st.markdown("AI-powered detection of undervalued properties with high potential returns.")
+
+        # Get undervalued properties
+        undervalued = heatmap_gen.get_undervalued_properties(heatmap_data)
+
+        if len(undervalued) > 0:
+            st.success(f"Found {len(undervalued)} potentially undervalued properties!")
+
+            for i, (_, row) in enumerate(undervalued.iterrows()):
+                discount_pct = (1 - row['current_price'] / heatmap_data['current_price'].mean()) * 100
+
+                st.markdown("---")
+
+                gem_col1, gem_col2 = st.columns([2, 1])
+
+                with gem_col1:
+                    st.markdown(f"""
+                    <div class="result-card" style="border-left: 5px solid #22c55e;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                            <div>
+                                <div style="font-size:1.5rem; font-weight:800; color:#0f172a; margin:0;">🔍 {row['city']} - {row['property_type'].replace('_', ' ').title()}</div>
+                                <div style="font-size:0.85rem; color:#64748b; margin-top:0.25rem;">Undervalue Score: <strong>{row['undervalue_score']:.1f}</strong></div>
+                            </div>
+                            <span class="badge-buy" style="box-shadow:0 4px 12px rgba(34,197,94,0.3);">POTENTIAL GEM</span>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem; background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding:1rem; border-radius:10px; border:1px solid #86efac;">
+                            <div style="text-align:center;">
+                                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Price</div>
+                                <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">${row['current_price']/1000:.0f}K</div>
+                            </div>
+                            <div style="text-align:center;">
+                                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Discount</div>
+                                <div style="font-size:1.25rem; font-weight:800; color:#16a34a;">{discount_pct:.0f}% OFF</div>
+                            </div>
+                            <div style="text-align:center;">
+                                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Yield</div>
+                                <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">{row['rental_yield']:.1f}%</div>
+                            </div>
+                            <div style="text-align:center;">
+                                <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Score</div>
+                                <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">{row['investment_score']:.0f}/100</div>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                with gem_col2:
+                    st.markdown("#### Why It's Undervalued")
+                    st.markdown(f"""
+                    <div style="background:#f8fafc; padding:1rem; border-radius:8px; font-size:0.9rem;">
+                        <div style="margin-bottom:0.5rem;">📉 <strong>Price:</strong> {discount_pct:.0f}% below market average</div>
+                        <div style="margin-bottom:0.5rem;">💰 <strong>Yield:</strong> {row['rental_yield']:.1f}% (above median)</div>
+                        <div style="margin-bottom:0.5rem;">📊 <strong>Regime:</strong> {row['market_regime'].title()} market</div>
+                        <div>📈 <strong>Appreciation:</strong> {row['appreciation_12m']:+.1f}% (12mo)</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    estimated_monthly_rent = row['current_price'] * row['rental_yield'] / 12
+                    st.markdown(f"""
+                    <div style="background:#f0f9ff; padding:0.75rem; border-radius:8px; margin-top:0.5rem; border:1px solid #bae6fd;">
+                        <strong>💡 Est. Monthly Rent:</strong> ${estimated_monthly_rent:,.0f}
+                    </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.info("No undervalued properties detected in current market conditions.")
+
 
 # =============================================================================
-# TAB 3: AI CHATBOT
+# TAB 3: AI ADVISOR
 # =============================================================================
 
 with tabs[2]:
@@ -1104,193 +1309,11 @@ with tabs[3]:
 
 
 # =============================================================================
-# TAB 5: SCENARIO SIMULATOR
+# TAB 4: MY RECOMMENDATIONS
 # =============================================================================
 
 with tabs[4]:
-    st.markdown("### Investment Scenario Simulator")
-    st.markdown("Multi-year wealth projection with Monte Carlo uncertainty modeling.")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        sim_price = st.number_input(
-            "Purchase Price ($)",
-            min_value=200000,
-            max_value=10000000,
-            value=750000,
-            step=25000,
-            key="sim_price"
-        )
-
-        sim_down = st.slider(
-            "Down Payment (%)",
-            min_value=5,
-            max_value=50,
-            value=20,
-            key="sim_down"
-        )
-
-        sim_rent = st.number_input(
-            "Monthly Rent ($)",
-            min_value=0,
-            max_value=50000,
-            value=2600,
-            step=100,
-            help="Set to 0 for owner-occupied",
-            key="sim_rent"
-        )
-
-    with col2:
-        sim_city = st.selectbox(
-            "City",
-            ["Vancouver", "Toronto", "Calgary", "Burnaby", "Richmond", "North Vancouver"],
-            index=0,
-            key="sim_city"
-        )
-
-        sim_horizon = st.slider(
-            "Time Horizon (years)",
-            min_value=5,
-            max_value=30,
-            value=10,
-            step=5,
-            key="sim_horizon"
-        )
-
-        sim_rate = st.number_input(
-            "Mortgage Rate (%)",
-            min_value=1.0,
-            max_value=15.0,
-            value=5.0,
-            step=0.25,
-            key="sim_rate"
-        )
-
-    if st.button("📈 Run Simulation", type="primary", use_container_width=True, key="run_sim"):
-        results = quick_scenario_analysis(
-            purchase_price=sim_price,
-            down_payment_pct=sim_down / 100,
-            monthly_rent=sim_rent,
-            city=sim_city,
-            time_horizon_years=sim_horizon
-        )
-
-        base = results["base_case"]
-        mc = results["monte_carlo"]
-        risk = results["risk_metrics"]
-
-        st.markdown("---")
-
-        # Key outcomes
-        r1, r2, r3, r4 = st.columns(4)
-
-        with r1:
-            st.metric(
-                "Final Property Value",
-                f"${base['final_property_value']:,.0f}",
-                f"{((base['final_property_value']/sim_price)**(1/sim_horizon)-1)*100:.1f}% CAGR"
-            )
-
-        with r2:
-            st.metric(
-                "Net Sale Proceeds",
-                f"${base['net_sale_proceeds']:,.0f}",
-                "After selling costs"
-            )
-
-        with r3:
-            cagr_val = mc['cagr_mean'] * 100 if not np.isnan(mc['cagr_mean']) else 0
-            cagr_std = mc['cagr_std'] * 100 if not np.isnan(mc['cagr_std']) else 0
-            st.metric(
-                "Expected CAGR",
-                f"{cagr_val:.1f}%",
-                f"±{cagr_std:.1f}%"
-            )
-
-        with r4:
-            st.metric(
-                "Probability >5% Return",
-                f"{mc['probability_beat_5pct']*100:.0f}%",
-                risk["risk_level"] + " Risk"
-            )
-
-        # Projection chart
-        st.markdown("#### Wealth Projection Over Time")
-
-        years = base["years"]
-        property_values = base["property_values"]
-        equity = base["equity"]
-
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=years,
-            y=property_values,
-            mode="lines+markers",
-            name="Property Value",
-            line=dict(color="#0078D4", width=3)
-        ))
-        fig.add_trace(go.Scatter(
-            x=years,
-            y=equity,
-            mode="lines+markers",
-            name="Equity",
-            line=dict(color="#22c55e", width=3)
-        ))
-
-        fig.update_layout(
-            height=400,
-            xaxis_title="Year",
-            yaxis_title="Value ($)",
-            yaxis_tickformat="$,.0f",
-            showlegend=True
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-        # Monte Carlo results
-        st.markdown("#### Monte Carlo Analysis")
-
-        mc1, mc2, mc3 = st.columns(3)
-
-        with mc1:
-            st.markdown("**Value Range (95% Confidence)**")
-            st.markdown(f"""
-            - 5th Percentile: ${mc['final_value_p5']:,.0f}
-            - Expected: ${mc['final_value_mean']:,.0f}
-            - 95th Percentile: ${mc['final_value_p95']:,.0f}
-            """)
-
-        with mc2:
-            st.markdown("**Return Probabilities**")
-            st.markdown(f"""
-            - Positive Return: {mc['probability_positive_return']*100:.0f}%
-            - Beat 5% CAGR: {mc['probability_beat_5pct']*100:.0f}%
-            - Beat 10% CAGR: {mc['probability_beat_10pct']*100:.0f}%
-            """)
-
-        with mc3:
-            st.markdown("**Risk Metrics**")
-            st.markdown(f"""
-            - Risk Level: {risk['risk_level']}
-            - Risk Score: {risk['risk_score']:.0f}/100
-            - Volatility: {risk['volatility']*100:.1f}%
-            """)
-
-        # Scenario comparison
-        st.markdown("#### Scenario Comparison")
-        st.dataframe(
-            results["scenario_comparison"].round(2),
-            use_container_width=True
-        )
-
-
-# =============================================================================
-# TAB 6: PERSONALIZED RECOMMENDATIONS
-# =============================================================================
-
-with tabs[5]:
-    st.markdown("### Personalized Recommendations")
+    st.markdown("### 🎯 My Recommendations")
     st.markdown("Get property recommendations tailored to your investment goals and risk profile.")
 
     # Initialize expanded property state
@@ -1318,12 +1341,10 @@ with tabs[5]:
         st.markdown("#### Top Recommendations for Your Profile")
 
         for i, (_, row) in enumerate(recs.head(5).iterrows()):
-            # Check if this property is expanded
             is_expanded = st.session_state.expanded_property == i
 
             col1, col2 = st.columns([3, 1])
 
-            # Get regime for styling
             regime = row['market_regime']
             regime_badge = "badge-hot" if regime == "hot" else "badge-warm" if regime == "warm" else "badge-cooling" if regime == "cooling" else "badge-cold"
             regime_colors = {"hot": "#dc2626", "warm": "#ea580c", "cooling": "#2563eb", "cold": "#374151"}
@@ -1364,7 +1385,6 @@ with tabs[5]:
                 st.metric("Investment Score", f"{row['investment_score']:.0f}/100")
                 st.metric("Buy/Rent Score", f"{row['buy_vs_rent_score']:.0f}/100")
 
-                # Analyze button that expands inline
                 btn_label = "▼ Hide Analysis" if is_expanded else "▲ Analyze"
                 if st.button(btn_label, key=f"rec_{i}", use_container_width=True):
                     if is_expanded:
@@ -1373,7 +1393,6 @@ with tabs[5]:
                         st.session_state.expanded_property = i
                     st.rerun()
 
-            # Inline expansion panel with full analysis
             if is_expanded:
                 st.markdown(f"""
                 <div style="background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
@@ -1383,7 +1402,6 @@ with tabs[5]:
                 </div>
                 """, unsafe_allow_html=True)
 
-                # Create analysis columns
                 analysis_col1, analysis_col2, analysis_col3 = st.columns(3)
 
                 with analysis_col1:
@@ -1393,8 +1411,8 @@ with tabs[5]:
                     st.markdown(f"- Appreciation: {row['appreciation_12m']:+.1f}%")
 
                 with analysis_col2:
-                    st.markdown("**💰 Cash Flow**")
                     monthly_rent = row['current_price'] * row['rental_yield'] / 12
+                    st.markdown("**💰 Cash Flow**")
                     st.markdown(f"- Est. Monthly Rent: ${monthly_rent:,.0f}")
                     st.markdown(f"- Gross Yield: {row['rental_yield']:.1f}%")
                     st.markdown(f"- Cap Rate: ~{row['rental_yield'] * 0.7:.1f}%")
@@ -1402,32 +1420,27 @@ with tabs[5]:
                 with analysis_col3:
                     st.markdown("**⚖️ Recommendation**")
                     if row['investment_score'] >= 70:
-                        st.success("**STRONG BUY**\n\nScore indicates excellent opportunity")
+                        st.success("**STRONG BUY**")
                     elif row['investment_score'] >= 50:
-                        st.info("**BUY**\n\nGood fundamentals with moderate risk")
+                        st.info("**BUY**")
                     else:
-                        st.warning("**HOLD/CAUTION**\n\nConsider alternatives")
+                        st.warning("**HOLD**")
 
-                # Quick actions
                 st.markdown("**⚡ Quick Actions:**")
-                action_col1, action_col2, action_col3, action_col4 = st.columns(4)
+                action_col1, action_col2, action_col3 = st.columns(3)
                 with action_col1:
                     if st.button("🧮 Calculate ROI", key=f"roi_{i}", use_container_width=True):
                         st.session_state.roi_price = row['current_price']
                         st.session_state.roi_rent = monthly_rent
-                        st.info("ROI Calculator values pre-filled! Scroll to Tab 4.")
+                        st.info("ROI Calculator values pre-filled!")
                 with action_col2:
-                    if st.button("📉 Run Scenario", key=f"scenario_{i}", use_container_width=True):
-                        st.session_state.scenario_city = row['city']
-                        st.info("Scenario Simulator pre-filled! Go to Tab 5.")
-                with action_col3:
                     if st.button("🤖 Ask AI", key=f"ai_{i}", use_container_width=True):
                         st.session_state.chat_history.append({
                             "role": "user",
                             "content": f"Analyze {row['city']} {row['property_type'].replace('_', ' ')} as investment - price ${row['current_price']:,.0f}, yield {row['rental_yield']:.1f}%"
                         })
                         st.success("AI analysis ready in AI Advisor tab!")
-                with action_col4:
+                with action_col3:
                     if st.button("📍 Compare Cities", key=f"compare_{i}", use_container_width=True):
                         st.info("Use Market Heatmap to compare locations")
 
@@ -1442,348 +1455,11 @@ with tabs[5]:
     budget_col1, budget_col2 = st.columns(2)
 
     with budget_col1:
-        min_budget = st.number_input(
-            "Min Budget ($)",
-            min_value=0,
-            max_value=10000000,
-            value=300000,
-            step=50000,
-            key="min_budget"
-        )
-
+        min_budget = st.number_input("Min Budget ($)", min_value=0, max_value=10000000, value=300000, step=50000, key="min_budget")
     with budget_col2:
-        max_budget = st.number_input(
-            "Max Budget ($)",
-            min_value=0,
-            max_value=10000000,
-            value=1500000,
-            step=50000,
-            key="max_budget"
-        )
+        max_budget = st.number_input("Max Budget ($)", min_value=0, max_value=10000000, value=1500000, step=50000, key="max_budget")
 
-    filtered = heatmap_data[
-        (heatmap_data["current_price"] >= min_budget) &
-        (heatmap_data["current_price"] <= max_budget)
-    ]
+    filtered = heatmap_data[(heatmap_data["current_price"] >= min_budget) & (heatmap_data["current_price"] <= max_budget)]
 
     if len(filtered) > 0:
-        st.dataframe(
-            filtered[["city", "property_type", "current_price", "appreciation_12m", "rental_yield", "investment_score"]].round(2),
-            use_container_width=True
-        )
-
-
-# =============================================================================
-# TAB 7: HIDDEN GEMS
-# =============================================================================
-
-with tabs[6]:
-    st.markdown("### Hidden Gems Engine")
-    st.markdown("AI-powered detection of undervalued properties with high potential returns.")
-
-    heatmap_data = generate_sample_heatmap_data()
-    heatmap_gen = components['heatmap']
-
-    # Get undervalued properties
-    undervalued = heatmap_gen.get_undervalued_properties(heatmap_data)
-
-    if len(undervalued) > 0:
-        st.success(f"Found {len(undervalued)} potentially undervalued properties!")
-
-        for i, (_, row) in enumerate(undervalued.iterrows()):
-            # Calculate discount percentage
-            discount_pct = (1 - row['current_price'] / heatmap_data['current_price'].mean()) * 100
-
-            st.markdown("---")
-
-            col1, col2 = st.columns([2, 1])
-
-            with col1:
-                st.markdown(f"""
-                <div class="result-card" style="border-left: 5px solid #22c55e;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                        <div>
-                            <div style="font-size:1.5rem; font-weight:800; color:#0f172a; margin:0;">🔍 {row['city']} - {row['property_type'].replace('_', ' ').title()}</div>
-                            <div style="font-size:0.85rem; color:#64748b; margin-top:0.25rem;">Undervalue Score: <strong>{row['undervalue_score']:.1f}</strong></div>
-                        </div>
-                        <span class="badge-buy" style="box-shadow:0 4px 12px rgba(34,197,94,0.3);">POTENTIAL GEM</span>
-                    </div>
-
-                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem; background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding:1rem; border-radius:10px; border:1px solid #86efac;">
-                        <div style="text-align:center;">
-                            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Price</div>
-                            <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">${row['current_price']/1000:.0f}K</div>
-                        </div>
-                        <div style="text-align:center;">
-                            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Discount</div>
-                            <div style="font-size:1.25rem; font-weight:800; color:#16a34a;">{discount_pct:.0f}% OFF</div>
-                        </div>
-                        <div style="text-align:center;">
-                            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Yield</div>
-                            <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">{row['rental_yield']:.1f}%</div>
-                        </div>
-                        <div style="text-align:center;">
-                            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Score</div>
-                            <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">{row['investment_score']:.0f}/100</div>
-                        </div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-
-            with col2:
-                st.markdown("#### Why It's Undervalued")
-                st.markdown(f"""
-                <div style="background:#f8fafc; padding:1rem; border-radius:8px; font-size:0.9rem;">
-                    <div style="margin-bottom:0.5rem;">📉 <strong>Price:</strong> {discount_pct:.0f}% below market average</div>
-                    <div style="margin-bottom:0.5rem;">💰 <strong>Yield:</strong> {row['rental_yield']:.1f}% (above median)</div>
-                    <div style="margin-bottom:0.5rem;">📊 <strong>Regime:</strong> {row['market_regime'].title()} market</div>
-                    <div>📈 <strong>Appreciation:</strong> {row['appreciation_12m']:+.1f}% (12mo)</div>
-                </div>
-                """, unsafe_allow_html=True)
-
-                # Quick ROI estimate
-                estimated_monthly_rent = row['current_price'] * row['rental_yield'] / 12
-                st.markdown(f"""
-                <div style="background:#f0f9ff; padding:0.75rem; border-radius:8px; margin-top:0.5rem; border:1px solid #bae6fd;">
-                    <strong>💡 Est. Monthly Rent:</strong> ${estimated_monthly_rent:,.0f}
-                </div>
-                """, unsafe_allow_html=True)
-    else:
-        st.info("No undervalued properties detected in current market conditions.")
-
-    # Market opportunities summary
-    st.markdown("---")
-    st.markdown("### Market Opportunities Summary")
-
-    opp1, opp2, opp3 = st.columns(3)
-
-    with opp1:
-        st.markdown("**Hot Markets**")
-        hot = heatmap_gen.get_hot_markets(heatmap_data)
-        if len(hot) > 0:
-            for _, row in hot.head(3).iterrows():
-                st.markdown(f"- {row['city']} {row['property_type'].replace('_', ' ').title()}: {row['appreciation_12m']:.1f}%")
-        else:
-            st.markdown("No hot markets currently")
-
-    with opp2:
-        st.markdown("**Highest Yield**")
-        highest_yield = heatmap_data.nlargest(3, "rental_yield")
-        for _, row in highest_yield.iterrows():
-            st.markdown(f"- {row['city']} {row['property_type'].replace('_', ' ').title()}: {row['rental_yield']:.2f}%")
-
-    with opp3:
-        st.markdown("**Best Investment Scores**")
-        best_score = heatmap_data.nlargest(3, "investment_score")
-        for _, row in best_score.iterrows():
-            st.markdown(f"- {row['city']} {row['property_type'].replace('_', ' ').title()}: {row['investment_score']:.0f}/100")
-
-
-# =============================================================================
-# TAB 8: CASE STUDIES
-# =============================================================================
-
-with tabs[7]:
-    st.markdown("### Real Estate Case Studies")
-    st.markdown("Deep-dive analysis of real investment properties with historical performance and lessons learned.")
-
-    case_studies = get_all_case_studies()
-
-    # Case study selector
-    selected_id = st.selectbox(
-        "Select Case Study",
-        [cs.id for cs in case_studies],
-        format_func=lambda x: next(cs.title for cs in case_studies if cs.id == x)
-    )
-
-    selected_cs = next(cs for cs in case_studies if cs.id == selected_id)
-    presentation = create_case_study_presentation(selected_cs)
-
-    st.markdown("---")
-
-    # Overview
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        st.markdown(f"#### {selected_cs.title}")
-        st.markdown(selected_cs.description)
-
-        st.markdown("**Investment Thesis:**")
-        st.markdown(selected_cs.investment_thesis)
-
-    with col2:
-        st.markdown("**Key Metrics**")
-        metrics = selected_cs.key_metrics
-        st.metric("Purchase Price", f"${metrics['purchase_price']:,}")
-        st.metric("Current Value", f"${metrics['current_value']:,}")
-        st.metric("Total Appreciation", metrics['total_appreciation'])
-        st.metric("Annualized Return", metrics['annualized_appreciation'])
-        st.metric("Gross Yield", metrics['gross_yield'])
-        st.metric("Cap Rate", metrics['cap_rate'])
-        st.metric("Total ROI", metrics['total_roi'])
-
-    st.markdown("")
-
-    # Charts
-    if selected_cs.charts:
-        st.markdown("#### Performance Charts")
-        if "price_history" in selected_cs.charts:
-            st.plotly_chart(selected_cs.charts["price_history"], use_container_width=True)
-        if "rent_growth" in selected_cs.charts:
-            st.plotly_chart(selected_cs.charts["rent_growth"], use_container_width=True)
-
-    # Outcome and lessons
-    st.markdown("---")
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("#### Outcome")
-        st.markdown(selected_cs.outcome)
-
-    with col2:
-        st.markdown("#### Lessons Learned")
-        for lesson in selected_cs.lessons:
-            st.markdown(f"• {lesson}")
-
-    # Forecasts
-    st.markdown("---")
-    st.markdown("#### ML Forecasts")
-
-    forecast_cols = st.columns(3)
-    for i, (horizon, forecast) in enumerate(selected_cs.predictions.items()):
-        with forecast_cols[i]:
-            st.markdown(f"**{horizon.replace('_', ' ').title()}**")
-            st.metric("Predicted Price", f"${forecast['price']:,}")
-            st.caption(f"Confidence: {forecast['confidence'].title()}")
-
-    # Comparison table
-    st.markdown("---")
-    st.markdown("### Compare All Case Studies")
-
-    comparison_df = compare_case_studies(case_studies)
-    st.dataframe(comparison_df, use_container_width=True)
-
-
-# =============================================================================
-# TAB 9: NEIGHBORHOOD ANALYSIS
-# =============================================================================
-
-with tabs[8]:
-    st.markdown("### Neighborhood Graph Analysis")
-    st.markdown("Graph-based modeling of spatial relationships between properties, amenities, and neighborhoods.")
-
-    # Create sample graph
-    @st.cache_resource
-    def get_neighborhood_graph():
-        return create_sample_graph()
-
-    graph = get_neighborhood_graph()
-
-    st.markdown("---")
-
-    # Graph statistics
-    stat1, stat2, stat3, stat4 = st.columns(4)
-
-    with stat1:
-        st.metric("Properties", len(graph.properties))
-
-    with stat2:
-        st.metric("Amenities", len(graph.amenities))
-
-    with stat3:
-        st.metric("Neighborhoods", len(graph.neighborhoods))
-
-    with stat4:
-        st.metric("Graph Edges", graph.graph.number_of_edges())
-
-    st.markdown("")
-
-    # Property scores
-    st.markdown("### Location Scores")
-    st.markdown("Walkability, transit access, and overall location quality based on graph analysis.")
-
-    scores = graph.compute_property_scores()
-
-    score_data = []
-    for prop_id, prop_scores in scores.items():
-        prop = graph.properties[prop_id]
-        score_data.append({
-            "Property": f"{prop.neighborhood} - {prop.property_type}",
-            "Price": prop.price,
-            "Walkability": prop_scores["walkability_score"],
-            "Transit Score": prop_scores["transit_score"],
-            "Connectivity": prop_scores["connectivity_score"],
-            "Location Score": prop_scores["overall_location_score"]
-        })
-
-    score_df = pd.DataFrame(score_data)
-    st.dataframe(score_df, use_container_width=True)
-
-    # Neighborhood summaries
-    st.markdown("### Neighborhood Summaries")
-
-    neigh_cols = st.columns(len(graph.neighborhoods))
-
-    for i, (neigh_id, neigh) in enumerate(graph.neighborhoods.items()):
-        with neigh_cols[i]:
-            summary = graph.get_neighborhood_summary(neigh_id)
-            if "error" not in summary:
-                st.markdown(f"**{summary['name']}**")
-                st.caption(summary['city'])
-                st.markdown(f"Properties: {summary['property_count']}")
-                st.markdown(f"Avg Price: ${summary['avg_price']:,.0f}")
-                st.markdown(f"Walkability: {summary['walkability_score']}")
-                st.markdown(f"Location Score: {summary['avg_location_score']}")
-
-    # Market regime detection
-    st.markdown("---")
-    st.markdown("### Market Regime Detection")
-
-    detector = MarketRegimeDetector()
-    regimes = detector.define_regimes()
-
-    regime_cols = st.columns(4)
-    for i, (regime, info) in enumerate(regimes.items()):
-        with regime_cols[i % 4]:
-            st.markdown(f"**{regime.upper()}**")
-            st.caption(info["description"])
-            st.markdown(f"**Action:** {info['investor_action']}")
-
-    # Interactive regime detector
-    st.markdown("#### Test Market Regime Detection")
-
-    reg_col1, reg_col2, reg_col3 = st.columns(3)
-
-    with reg_col1:
-        test_momentum = st.slider("Price Momentum (%)", -5.0, 10.0, 3.0, 0.5)
-    with reg_col2:
-        test_dom = st.slider("Days on Market", 10, 150, 45, 5)
-    with reg_col3:
-        test_inventory = st.slider("Inventory Change (%)", -30, 30, 0, 5)
-
-    test_metrics = {
-        "price_momentum": test_momentum,
-        "days_on_market": test_dom,
-        "inventory_change": test_inventory
-    }
-
-    detected_regime, confidence, details = detector.detect_regime(test_metrics)
-
-    st.markdown(f"**Detected Regime:** :{regimes[detected_regime]['color']}[{detected_regime.upper()}] ({confidence:.0%} confidence)")
-    st.markdown(f"**Recommendation:** {details['investor_action']}")
-
-
-# =============================================================================
-# FOOTER
-# =============================================================================
-
-st.markdown("---")
-st.markdown("""
-<div style="text-align:center;color:#666;padding:2rem;">
-    <p><strong>⚠️ Disclaimer:</strong> This platform provides informational analysis only and does not constitute financial advice.
-    Real estate investments carry risks. Always consult with qualified professionals before making investment decisions.</p>
-    <p style="font-size:0.875rem;margin-top:1rem;">
-    Built with ❤️ for Canadian real estate investors | Powered by Machine Learning
-    </p>
-</div>
-""", unsafe_allow_html=True)
+        st.dataframe(filtered[["city", "property_type", "current_price", "appreciation_12m", "rental_yield", "investment_score"]].round(2), use_container_width=True)
