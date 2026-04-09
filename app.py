@@ -115,29 +115,29 @@ st.markdown("""
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
         padding: 0.75rem;
-        background: #e2e8f0;
+        background: #1e293b !important;
         border-radius: 12px;
-        border: 1px solid #cbd5e1;
+        border: 1px solid #334155;
     }
     .stTabs [data-baseweb="tab"] {
         padding: 12px 20px;
         border-radius: 8px;
-        font-weight: 600;
-        font-size: 0.85rem;
+        font-weight: 700;
+        font-size: 0.9rem;
         transition: all 0.2s ease;
         border: 2px solid transparent;
-        color: #475569;
-        background: #f8fafc;
+        color: #94a3b8 !important;
+        background: #334155 !important;
     }
     .stTabs [data-baseweb="tab"]:hover {
-        background: #ffffff;
+        background: #475569 !important;
         border-color: #0078D4;
-        color: #0078D4;
+        color: #ffffff !important;
     }
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        background: linear-gradient(135deg, #0078D4 0%, #00BCF2 100%);
-        color: white !important;
-        box-shadow: 0 4px 12px rgba(0, 120, 212, 0.4);
+        background: linear-gradient(135deg, #0078D4 0%, #00BCF2 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 16px rgba(0, 120, 212, 0.5);
         border-color: #0078D4;
     }
 
