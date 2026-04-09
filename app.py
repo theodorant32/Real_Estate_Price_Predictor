@@ -666,41 +666,30 @@ with tabs[0]:
 # =============================================================================
 
 with tabs[1]:
+    # Compact header with selector inline
     st.markdown("### Market Heatmap")
-    st.markdown("Visualize market opportunities across Canadian cities with interactive heatmaps.")
 
     heatmap_data = generate_sample_heatmap_data()
     heatmap_gen = components['heatmap']
 
-    # Visualization type selector
-    viz_type = st.selectbox(
-        "Visualization Type",
-        ["Investment Score", "Appreciation (12m)", "Rental Yield", "Cap Rate", "Buy vs Rent Score"]
-    )
+    # Compact inline selector with description
+    col_sel1, col_sel2 = st.columns([1, 3])
+    with col_sel1:
+        viz_type = st.selectbox(
+            "Metric",
+            ["Investment Score", "Appreciation (12m)", "Rental Yield", "Cap Rate", "Buy vs Rent Score"]
+        )
+    with col_sel2:
+        metric_info = {
+            "Investment Score": "0-100 score combining growth, yield & risk",
+            "Appreciation (12m)": "Predicted price growth over 12 months",
+            "Rental Yield": "Annual rent as % of property price",
+            "Cap Rate": "Net operating income / property value",
+            "Buy vs Rent Score": "Higher = better to buy than rent"
+        }
+        st.markdown(f"<div style='padding: 0.75rem 1rem; color: #64748b; font-size: 0.9rem;'>{metric_info[viz_type]}</div>", unsafe_allow_html=True)
 
     col1, col2 = st.columns([2, 1])
-
-    # Metric description cards
-    metric_info = {
-        "Investment Score": ("0-100 score combining growth, yield & risk", "🎯", "#0078D4"),
-        "Appreciation (12m)": ("Predicted price growth over 12 months", "📈", "#22c55e"),
-        "Rental Yield": ("Annual rent as % of property price", "💰", "#f59e0b"),
-        "Cap Rate": ("Net operating income / property value", "📊", "#8b5cf6"),
-        "Buy vs Rent Score": ("Higher = better to buy than rent", "⚖️", "#06b6d4")
-    }
-
-    info_color = metric_info[viz_type][2]
-    st.markdown(f"""
-    <div style="background: linear-gradient(135deg, {info_color}15 0%, {info_color}08 100%);
-                padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem;
-                border: 1px solid {info_color}30; display: flex; align-items: center; gap: 0.75rem;">
-        <span style="font-size: 1.5rem;">{metric_info[viz_type][1]}</span>
-        <div>
-            <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 0.25rem;">{viz_type}</div>
-            <div style="font-size: 0.875rem; color: #6b7280;">{metric_info[viz_type][0]}</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
 
     # Enhanced map with better styling
     if viz_type == "Investment Score":
@@ -1302,32 +1291,38 @@ with tabs[5]:
         for i, (_, row) in enumerate(recs.head(5).iterrows()):
             col1, col2, col3 = st.columns([2, 1, 1])
 
+            # Get regime for styling
+            regime = row['market_regime']
+            regime_badge = "badge-hot" if regime == "hot" else "badge-warm" if regime == "warm" else "badge-cooling" if regime == "cooling" else "badge-cold"
+            regime_colors = {"hot": "#dc2626", "warm": "#ea580c", "cooling": "#2563eb", "cold": "#374151"}
+            accent_color = regime_colors.get(regime, "#0078D4")
+
             with col1:
                 st.markdown(f"""
-                <div class="result-card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div class="result-card" style="border-left: 5px solid {accent_color};">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
                         <div>
-                            <h3 style="margin:0">{row['city']}</h3>
-                            <small style="color:#666">{row['property_type'].replace('_', ' ').title()}</small>
+                            <div style="font-size:1.5rem; font-weight:800; color:#0f172a; margin:0;">{row['city']}</div>
+                            <div style="font-size:0.9rem; color:#64748b; font-weight:600; background:#f1f5f9; padding:0.25rem 0.75rem; border-radius:4px; display:inline-block; margin-top:0.5rem;">
+                                {row['property_type'].replace('_', ' ').title()}
+                            </div>
                         </div>
-                        <span class="badge-{'hot' if row['market_regime']=='hot' else 'warm' if row['market_regime']=='warm' else 'cooling'}">
-                            {row['market_regime'].upper()}
-                        </span>
+                        <span class="{regime_badge}" style="box-shadow:0 2px 8px rgba(0,0,0,0.15);">{regime.upper()}</span>
                     </div>
-                    <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;">
-                        <div>
-                            <small style="color:#666">Price</small><br>
-                            <strong>${row['current_price']:,.0f}</strong>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem; background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding:1rem; border-radius:10px; border:1px solid #e2e8f0;">
+                        <div style="text-align:center;">
+                            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Price</div>
+                            <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">${row['current_price']/1000:.0f}K</div>
                         </div>
-                        <div>
-                            <small style="color:#666">Appreciation</small><br>
-                            <strong style="color:{'#22c55e' if row['appreciation_12m']>3 else '#f59e0b' if row['appreciation_12m']>0 else '#ef4444'}">
+                        <div style="text-align:center; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0;">
+                            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Appreciation</div>
+                            <div style="font-size:1.25rem; font-weight:800; color:{'#16a34a' if row['appreciation_12m']>3 else '#d97706' if row['appreciation_12m']>0 else '#dc2626'}">
                                 {row['appreciation_12m']:+.1f}%
-                            </strong>
+                            </div>
                         </div>
-                        <div>
-                            <small style="color:#666">Yield</small><br>
-                            <strong>{row['rental_yield']:.2f}%</strong>
+                        <div style="text-align:center;">
+                            <div style="font-size:0.7rem; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Yield</div>
+                            <div style="font-size:1.25rem; font-weight:800; color:#0f172a;">{row['rental_yield']:.1f}%</div>
                         </div>
                     </div>
                 </div>
