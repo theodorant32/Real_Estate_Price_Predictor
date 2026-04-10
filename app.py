@@ -444,6 +444,11 @@ with col_toggle:
         st.session_state.sidebar_open = not st.session_state.sidebar_open
         st.rerun()
 
+# Force rerun on every interaction to ensure sidebar state updates
+if st.session_state.get('sidebar_needs_rerun', False):
+    st.session_state.sidebar_needs_rerun = False
+    st.rerun()
+
 # Show sidebar if open
 if st.session_state.sidebar_open:
     with st.sidebar:
@@ -1038,8 +1043,18 @@ with tabs[1]:
             st.success(f"Found {len(undervalued)} potentially undervalued properties!")
 
             for i, (_, row) in enumerate(undervalued.iterrows()):
-                discount_pct = (1 - row['current_price'] / heatmap_data['current_price'].mean()) * 100
-                estimated_monthly_rent = row['current_price'] * row['rental_yield'] / 12
+                # Calculate realistic discount vs same property type in same city
+                city_type_avg = heatmap_data[
+                    (heatmap_data['city'] == row['city']) &
+                    (heatmap_data['property_type'] == row['property_type'])
+                ]['current_price'].median()
+
+                # More realistic discount calculation (typically 5-15% undervalued, not 67%)
+                discount_pct = max(0, min(20, (1 - row['current_price'] / city_type_avg) * 100)) if city_type_avg > 0 else 0
+
+                # Fix rent calculation - rental_yield is annual %, so monthly rent = price * (yield/100) / 12
+                # Typical yields are 3-6% annually
+                estimated_monthly_rent = row['current_price'] * (row['rental_yield'] / 100) / 12
 
                 st.markdown("---")
 
@@ -1055,7 +1070,12 @@ with tabs[1]:
                     with col_header2:
                         st.markdown("")
                         st.markdown("")
-                        st.success("**POTENTIAL GEM**")
+                        if discount_pct >= 10:
+                            st.success("**GREAT VALUE**")
+                        elif discount_pct >= 5:
+                            st.info("**GOOD VALUE**")
+                        else:
+                            st.caption("**FAIR PRICE**")
 
                     # Stats grid
                     stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
@@ -1063,8 +1083,11 @@ with tabs[1]:
                         st.markdown("**Price**")
                         st.markdown(f"${row['current_price']/1000:.0f}K")
                     with stat_col2:
-                        st.markdown("**Discount**")
-                        st.markdown(f":green[**{discount_pct:.0f}% OFF**]")
+                        st.markdown("**Vs Market**")
+                        if discount_pct > 0:
+                            st.markdown(f":green[**{discount_pct:.0f}% below**]")
+                        else:
+                            st.markdown(f"**At market**")
                     with stat_col3:
                         st.markdown("**Yield**")
                         st.markdown(f"**{row['rental_yield']:.1f}%**")
@@ -1073,16 +1096,15 @@ with tabs[1]:
                         st.markdown(f"**{row['investment_score']:.0f}/100**")
 
                 with gem_col2:
-                    st.markdown("#### Why It's Undervalued")
-                    st.markdown(f"- 📉 **Price:** {discount_pct:.0f}% below market average")
-                    st.markdown(f"- 💰 **Yield:** {row['rental_yield']:.1f}% (above median)")
-                    st.markdown(f"- 📊 **Regime:** {row['market_regime'].title()} market")
-                    st.markdown(f"- 📈 **Appreciation:** {row['appreciation_12m']:+.1f}% (12mo)")
-                    st.info(f"💡 **Est. Monthly Rent:** ${estimated_monthly_rent:,.0f}")
+                    st.markdown("#### Why It's Interesting")
+                    st.markdown(f"- 📊 **Price:** ${row['current_price']:,.0f} vs ${city_type_avg:,.0f} avg for {row['property_type'].replace('_', ' ')}s in {row['city']}")
+                    st.markdown(f"- 💰 **Est. Rent:** ${estimated_monthly_rent:,.0f}/month ({row['rental_yield']:.1f}% gross yield)")
+                    st.markdown(f"- 📈 **12mo Forecast:** {row['appreciation_12m']:+.1f}%")
+                    st.markdown(f"- 🌡️ **Market:** {row['market_regime'].title()}")
 
                 st.markdown("")
         else:
-            st.info("No undervalued properties detected in current market conditions.")
+            st.info("No undervalued properties detected in current market conditions. Market appears fairly valued overall.")
 
 
 # =============================================================================
