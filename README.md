@@ -190,12 +190,28 @@ docker run -p 8501:8501 propra
 
 ## Roadmap
 
-- [ ] Scrape actual listings (not just benchmark data)
-- [ ] Image analysis for listing photos (is that kitchen modern or just well-lit?)
-- [ ] MLS API integration if access granted
-- [ ] Expand to Toronto, Montreal, Ottawa
+### ✅ Completed
+- [x] Live property listings from public sources (Zolo.ca, brokerages)
+- [x] ML-powered price predictions with confidence intervals
+- [x] Interactive market heatmaps with investment scoring
+- [x] AI chatbot for natural language queries
+- [x] ROI calculator with cap rate, cash-on-cash, DSCR
+- [x] Scenario simulator with Monte Carlo projections
+- [x] Personalized recommendations based on investor profile
+- [x] Inline analysis expansion (no tab-switching needed)
+- [x] Professional NVIDIA-level UI polish
+
+### 🚧 In Progress
+- [ ] Image analysis for listing photos (AI scoring of interior quality)
+- [ ] Expand coverage: Montreal, Ottawa, Edmonton
+- [ ] Sentiment analysis from Bank of Canada announcements
+
+### 📋 Future
+- [ ] MLS API integration (if access granted)
 - [ ] Property image scoring with CNN
-- [ ] Sentiment analysis from news/social media
+- [ ] Real-time market alerts via email/SMS
+- [ ] Portfolio tracking for multiple properties
+- [ ] Mortgage broker integration for pre-approval
 
 ---
 
