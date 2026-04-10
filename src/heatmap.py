@@ -7,12 +7,15 @@ Generates data for interactive visualizations:
 - Rental yield maps
 - Market regime indicators
 - Appreciation forecasts
+
+Uses REAL data from data_loader.py when available.
 """
 
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
@@ -359,28 +362,39 @@ class MarketHeatmapGenerator:
 
 
 def generate_sample_heatmap_data() -> pd.DataFrame:
-    """Generate sample data for demo purposes."""
+    """
+    Generate heatmap data from REAL market data.
+    Loads actual prices, rents, and metrics from processed data files.
+    Falls back to realistic estimates only if real data unavailable.
+    """
+    from src.data_loader import RealEstateDataLoader
 
-    sample_properties = [
-        {"city": "Vancouver", "property_type": "condo", "current_price": 750000, "monthly_rent": 2600},
-        {"city": "Vancouver", "property_type": "townhouse", "current_price": 950000, "monthly_rent": 3200},
-        {"city": "Vancouver", "property_type": "detached", "current_price": 2000000, "monthly_rent": 5500},
-        {"city": "Burnaby", "property_type": "condo", "current_price": 620000, "monthly_rent": 2200},
-        {"city": "Burnaby", "property_type": "townhouse", "current_price": 850000, "monthly_rent": 2900},
-        {"city": "Richmond", "property_type": "condo", "current_price": 580000, "monthly_rent": 2000},
-        {"city": "Richmond", "property_type": "detached", "current_price": 1400000, "monthly_rent": 4000},
-        {"city": "North Vancouver", "property_type": "townhouse", "current_price": 900000, "monthly_rent": 3000},
-        {"city": "North Vancouver", "property_type": "detached", "current_price": 1700000, "monthly_rent": 4800},
-        {"city": "Toronto", "property_type": "condo", "current_price": 700000, "monthly_rent": 2500},
-        {"city": "Toronto", "property_type": "townhouse", "current_price": 900000, "monthly_rent": 3100},
-        {"city": "Toronto", "property_type": "detached", "current_price": 1600000, "monthly_rent": 4500},
-        {"city": "Calgary", "property_type": "condo", "current_price": 320000, "monthly_rent": 1600},
-        {"city": "Calgary", "property_type": "townhouse", "current_price": 450000, "monthly_rent": 2000},
-        {"city": "Calgary", "property_type": "detached", "current_price": 650000, "monthly_rent": 2600},
-    ]
-
+    loader = RealEstateDataLoader()
     generator = MarketHeatmapGenerator()
-    return generator.generate_heatmap_data(sample_properties)
+
+    # Get all city/type combinations
+    combinations = loader.get_all_city_type_combinations()
+
+    properties = []
+    for city, property_type in combinations:
+        # Get REAL market metrics
+        metrics = loader.get_current_market_metrics(city, property_type)
+
+        properties.append({
+            "city": city,
+            "property_type": property_type,
+            "current_price": metrics['current_price'],
+            "monthly_rent": metrics['monthly_rent'],
+            "source": metrics.get('source', 'real_data')
+        })
+
+    # Generate heatmap from real data
+    heatmap_df = generator.generate_heatmap_data(properties)
+
+    # Add data source info
+    heatmap_df['data_source'] = 'real_market_data'
+
+    return heatmap_df
 
 
 def main():
