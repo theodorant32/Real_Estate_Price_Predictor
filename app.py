@@ -1343,18 +1343,21 @@ with tabs[4]:
         listings_df = st.session_state.live_listings
 
         # Filters
-        filter_col1, filter_col2, filter_col3 = st.columns(3)
+        filter_col1, filter_col2, filter_col3, filter_col4 = st.columns(4)
         with filter_col1:
             selected_city = st.selectbox("City", sorted(listings_df['city'].unique()))
         with filter_col2:
             selected_type = st.selectbox("Property Type", sorted(listings_df['property_type'].unique()))
         with filter_col3:
             max_price = st.number_input("Max Price", min_value=0, value=2000000, step=100000)
+        with filter_col4:
+            min_beds = st.selectbox("Min Beds", [0, 1, 2, 3, 4], index=0)
 
         filtered = listings_df[
             (listings_df['city'] == selected_city) &
             (listings_df['property_type'] == selected_type) &
-            (listings_df['price'] <= max_price)
+            (listings_df['price'] <= max_price) &
+            (listings_df['bedrooms'] >= min_beds)
         ]
 
         if len(filtered) > 0:
@@ -1365,51 +1368,126 @@ with tabs[4]:
                 estimated_rent = row.get('estimated_monthly_rent', int(row['price'] * 0.04 / 12))
                 gross_yield = (estimated_rent * 12) / row['price'] * 100
 
+                # Property images
+                images = row.get('images', [])
+                description = row.get('description', '')
+                walk_score = row.get('walk_score', 0)
+                transit_score = row.get('transit_score', 0)
+                neighborhood = row.get('neighborhood', 'Unknown')
+                days_on_market = row.get('days_on_market', 0)
+
                 with st.container():
-                    card_col1, card_col2 = st.columns([3, 1])
+                    st.markdown(f"""
+                    <div class="result-card" style="border-left: 5px solid #0078D4;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+                            <div>
+                                <div style="font-size:1.25rem; font-weight:700; color:#0f172a;">
+                                    {row.get('address', f"{row['city']} Property")}
+                                </div>
+                                <div style="color:#64748b; font-size:0.9rem; margin-top:0.25rem;">
+                                    {neighborhood}, {row['city']} • {row['property_type'].replace('_', ' ').title()}
+                                </div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:1.75rem; font-weight:800; color:#0078D4;">${row['price']/1000:.0f}K</div>
+                                <div style="font-size:0.8rem; color:#22c55e; font-weight:600;">{gross_yield:.1f}% Gross Yield</div>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                    with card_col1:
+                    # Property images gallery
+                    if images:
+                        img_cols = st.columns(4)
+                        for i, img_url in enumerate(images[:4]):
+                            with img_cols[i]:
+                                st.image(img_url, use_container_width=True)
+
+                    # Property details
+                    details_col1, details_col2, details_col3, details_col4 = st.columns(4)
+                    with details_col1:
+                        st.metric("Price", f"${row['price']:,.0f}")
+                    with details_col2:
+                        st.metric("Beds / Baths", f"{row.get('bedrooms', 'N/A')} / {row.get('bathrooms', 'N/A')}")
+                    with details_col3:
+                        sqft = row.get('sqft', 0)
+                        st.metric("Size", f"{sqft:,} sqft" if sqft else "N/A")
+                    with details_col4:
+                        st.metric("Days on Market", f"{days_on_market}")
+
+                    # Accessibility scores
+                    access_col1, access_col2 = st.columns(2)
+                    with access_col1:
+                        walk_emoji = "🚶" if walk_score >= 70 else "🚶‍♂️" if walk_score >= 50 else "🚗"
+                        st.markdown(f"**{walk_emoji} Walk Score:** {walk_score}/100 " +
+                                    f"({'Very Walkable' if walk_score >= 70 else 'Somewhat Walkable' if walk_score >= 50 else 'Car Dependent'})")
+                    with access_col2:
+                        transit_emoji = "🚇" if transit_score >= 70 else "🚌" if transit_score >= 50 else "🚗"
+                        st.markdown(f"**{transit_emoji} Transit Score:** {transit_score}/100 " +
+                                    f"({'Excellent Transit' if transit_score >= 70 else 'Good Transit' if transit_score >= 50 else 'Minimal Transit'})")
+
+                    # Property description
+                    if description:
                         st.markdown(f"""
-                        <div class="result-card" style="border-left: 5px solid #0078D4;">
-                            <div style="font-size:1.25rem; font-weight:700; color:#0f172a;">
-                                {row.get('address', f"{row['city']} Property")}
-                            </div>
-                            <div style="color:#64748b; font-size:0.9rem; margin-top:0.25rem;">
-                                {row['city']} • {row['property_type'].replace('_', ' ').title()}
-                            </div>
+                        <div style="background:#f8fafc;padding:1rem;border-radius:8px;margin:1rem 0;">
+                            <strong style="color:#0f172a;">📝 About This Property</strong>
+                            <p style="color:#475569;margin:0.5rem 0 0 0;">{description}</p>
                         </div>
                         """, unsafe_allow_html=True)
 
-                        details_col1, details_col2, details_col3 = st.columns(3)
-                        with details_col1:
-                            st.metric("Price", f"${row['price']:,.0f}")
-                        with details_col2:
-                            beds = row.get('bedrooms', 'N/A')
-                            baths = row.get('bathrooms', 'N/A')
-                            st.metric("Beds / Baths", f"{beds} / {baths}")
-                        with details_col3:
-                            sqft = row.get('sqft', 0)
-                            st.metric("Size", f"{sqft:,} sqft" if sqft else "N/A")
+                    # Investment metrics
+                    st.markdown("---")
+                    invest_col1, invest_col2, invest_col3 = st.columns(3)
+                    with invest_col1:
+                        st.markdown(f"**💰 Est. Monthly Rent:** ${estimated_rent:,}")
+                    with invest_col2:
+                        st.markdown(f"**📈 Gross Yield:** {gross_yield:.1f}%")
+                    with invest_col3:
+                        st.markdown(f"**🏷️ Price/Sqft:** ${row['price']/row.get('sqft', 1):.0f}")
 
-                    with card_col2:
+                    # Analyze button
+                    if st.button("🔍 Full Investment Analysis", key=f"analyze_listing_{idx}", use_container_width=True, type="primary"):
+                        st.session_state.analyzing_listing_idx = idx if st.session_state.get('analyzing_listing_idx') != idx else None
+                        st.rerun()
+
+                    # Inline ROI Analysis (when triggered)
+                    if st.session_state.get('analyzing_listing_idx') == idx:
+                        st.markdown("**🧮 Quick Investment Analysis**")
+                        roi_inputs = PropertyInputs(
+                            purchase_price=row['price'],
+                            monthly_rent=estimated_rent,
+                            down_payment_pct=0.20
+                        )
+                        roi_metrics = components['roi'].calculate_all_metrics(roi_inputs)
+                        roi_grade = components['roi'].get_investment_grade(roi_metrics)
+
+                        roi_col1, roi_col2, roi_col3, roi_col4 = st.columns(4)
+                        with roi_col1:
+                            st.metric("Cap Rate", f"{roi_metrics['cap_rate']:.2f}%")
+                        with roi_col2:
+                            st.metric("Cash-on-Cash", f"{roi_metrics['cash_on_cash_return']:.2f}%")
+                        with roi_col3:
+                            st.metric("DSCR", f"{roi_metrics['dscr']:.2f}")
+                        with roi_col4:
+                            st.metric("Grade", roi_grade)
+
+                        # Price prediction
+                        pred = components['predictor'].predict_price_change(
+                            current_price=row['price'],
+                            city=row['city'],
+                            property_type=row['property_type'],
+                            horizon_months=12
+                        )
                         st.markdown(f"""
-                        <div style="text-align:right;">
-                            <div style="font-size:1.5rem; font-weight:800; color:#0078D4;">${row['price']/1000:.0f}K</div>
-                            <div style="font-size:0.85rem; color:#22c55e; font-weight:600;">{gross_yield:.1f}% Gross Yield</div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        - **12-Month Prediction**: ${pred['predicted_price_6m']:,.0f} ({pred['predicted_change_pct']:+.1f}%)
+                        - **Market Regime**: {pred['market_regime'].upper()}
+                        - **Confidence Range**: ${pred['confidence_lower']:,.0f} - ${pred['confidence_upper']:,.0f}
+                        """)
 
-                        if st.button("Analyze This Property", key=f"analyze_listing_{idx}", use_container_width=True):
-                            st.session_state.inline_roi_property = {
-                                'price': row['price'],
-                                'rent': estimated_rent,
-                                'city': row['city'],
-                                'property_type': row['property_type'],
-                                'address': row.get('address', '')
-                            }
-                            st.session_state.expanded_property = None
-                            st.session_state.active_tab = "recommendations"
+                        if st.button("Close Analysis", key=f"close_analysis_{idx}"):
+                            st.session_state.analyzing_listing_idx = None
                             st.rerun()
+                        st.markdown("---")
 
                     st.markdown("---")
         else:
